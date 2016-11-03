@@ -86,6 +86,7 @@ class AI:
 		handle_messages(self, game_state)
 		goal = self.decide_goal()
 		action = self.decide_actions(goal, game_state)
-		# with mutex lock:
-		game_state = action.perform(game_state)
+		(_, _, game_lock) = game_state 
+		with game_lock:
+			game_state = action.perform(game_state)
 		AI_loop(game_state)
