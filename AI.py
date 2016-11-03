@@ -61,6 +61,8 @@ class AI:
 
 	# basic loop for the AI to follow, runs forever.
 	def AI_loop(self, game_state):
+		# First Handle Messages, Resolve messages before proceeding
+		# handle_messages()
 		goal = self.decide_goal()
 		action = self.decide_actions(goal, game_state)
 		# with mutex lock:
