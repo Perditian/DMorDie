@@ -23,7 +23,12 @@ import Queue # something like this, we can use the Queue that supports locks
                  with self.__lock:
                          self.__addresses.append(Name) #NOTE: we can make this a dict to ensure unique IDs
                  return
-                 
+             
+          def remove_person(Name):
+                with self.__lock:
+                        self.__addresses.remove(Name)
+                return
+        
          # asynchronously send a message to one person
          def send_message(From, To, Message):
                  self.__queue.add((From, To, Message, None))
