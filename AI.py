@@ -24,6 +24,7 @@ class AI:
 	def __init__(self):
 		self.Goals = {}
 		self.DMtrust = 0.5
+		self.__lock = Lock() # used for messages
 
 	# initialize with a list of Goals, Weights, and Actions.
 	# |Goals| == |Weights| == |Actions|
