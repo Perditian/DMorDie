@@ -67,7 +67,7 @@ class AI:
 	# Good reason for polymorphic functions --> pass in NPCs or DM instead of AI
 	def handle_messages(self, game_state):
 		(Game, Messages) = game_state
-		my_mail = Messages.get_my_messages(self.__ID)
+		my_mail = Messages.get_mail(self.__ID)
 		for fun in my_mail:
 			fun(self, game_state)
 		return
