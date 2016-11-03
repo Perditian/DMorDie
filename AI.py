@@ -61,7 +61,15 @@ class AI:
 				max_utility = utility
 				best_action = action
 		return best_action
-
+	
+	# used by other characters to lock this thread:
+	def lock_me():
+		self.__lock.acquire()
+		
+	# used by other characters to unlock this thread:
+	def unlock_me():
+		self.__lock.release()
+	
 	# NOTE: this assumes a message-handling class that is passed with the game_state
 	# For now, messages are functions which take in the AI and Game State as parameters
 	# Good reason for polymorphic functions --> pass in NPCs or DM instead of AI
