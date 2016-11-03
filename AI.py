@@ -25,12 +25,13 @@ class AI:
 		self.Goals = {}
 		self.DMtrust = 0.5
 		self.__lock = Lock() # used for messages
+		self.__ID = "This is my unique Identifier/Name" 
 
 	# initialize with a list of Goals, Weights, and Actions.
 	# |Goals| == |Weights| == |Actions|
 	# Goals is a list of strings, weights is a list of doubles,
 	# and Actions is a dictionary of Actions (class), indexed by 0...n
-	def __init__(self, Goals, Weights, Actions, Trust):
+	def __init__(self, Goals, Weights, Actions, Trust, Name):
 		goals = {}
 		i = 0
 		for g in Goals:
@@ -38,6 +39,7 @@ class AI:
 			i += 1
 		self.Goals = goals
 		self.DMtrust = Trust
+		self.__ID = Name
 
 	# right now: determined completely randomly
 	# returns the set of actions for the decided goal
@@ -60,10 +62,20 @@ class AI:
 				best_action = action
 		return best_action
 
+	# NOTE: this assumes a message-handling class that is passed with the game_state
+	# For now, messages are functions which take in the AI and Game State as parameters
+	# Good reason for polymorphic functions --> pass in NPCs or DM instead of AI
+	def handle_messages(self, game_state):
+		(Game, Messages) = game_state
+		my_mail = Messages.get_my_messages(self.__ID)
+		for fun in my_mail:
+			fun(self, game_state)
+		return
+		
 	# basic loop for the AI to follow, runs forever.
 	def AI_loop(self, game_state):
 		# First Handle Messages, Resolve messages before proceeding
-		# handle_messages()
+		handle_messages(self, game_state)
 		goal = self.decide_goal()
 		action = self.decide_actions(goal, game_state)
 		# with mutex lock:
