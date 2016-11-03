@@ -2,6 +2,8 @@
  Avita Sharma
  Action Class
  Creates, evaluates, and performs an action
+ Note: The implementation requries action functions to be curried--or only accept the game_state as the argument
+ we can pass in args if this becomes a hassle.
 """ 
 
 class Action:
@@ -9,16 +11,18 @@ class Action:
 	# default success, no action function.
 	def __init__(self):
 		self.success = 0.5
-		self.action = None
-		self.expected = None
+		self.action = None 
+		self.action_utility = None
 		self.expected_utility = 0
 
 	# Actions are a collection of two functions and an initial probability
-	# of success. There is the perform function and the expected function
+	# of success. There is the action function and the expected action function
+	# the action function does the action, and the action utility function returns
+	# the utility if the action was performed
 	def __init__(self, fun_action, expected, success):
 		self.success = success
 		self.action = fun_action
-		self.expected = expected
+		self.action_utility = expected
 
 	# performs and evaluates action, updates probability of success
 	# accordingly
@@ -40,5 +44,5 @@ class Action:
 
 	# save the expected utility calculation and returns it.
 	def expected(self, game_state):
-		self.expected_utility = self.expected(game_state) * self.success
+		self.expected_utility = self.action_utility(game_state) * self.success
 		return self.expected_utility
