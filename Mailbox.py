@@ -15,7 +15,7 @@ import Queue # something like this, we can use the Queue that supports locks
  class Mailbox:
          
          def __init__:
-                 self.__lock = Lock()
+                 self.__lock = Lock() # used for locking the list of addresses
                  self.__queue = Queue()
                  self.__addresses = [] # a list of all the people that can use the mailbox
          
