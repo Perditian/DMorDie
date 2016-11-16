@@ -10,9 +10,12 @@ from AI import AI
 from Action import Action
 import threading
 import random
+from DungeonMaster import DungeonMaster
+from GameState import GameState
+import sys
 
 def pickpocket_utility(game_state):
-	(People, _, _) = game_state
+	People = game_state.Characters()
 	max_money = 0
 	total_money = 0
 	victim = None
@@ -26,16 +29,17 @@ def pickpocket_utility(game_state):
 	return (max_money, total_money, victim)
 
 def pickpocket(game_state, Victim):
-	(People, Mess, Lock) = game_state
+	People = game_state.Characters()
 	Money_Earned = People[Victim].Money
 	People['Rogue'].Money += Money_Earned
 	People[Victim].Money = 0
 	print("The Rogue pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!\n")
-	return (Money_Earned, (People, Mess, Lock))
+	game_state.set_Characters(People)
+	return (Money_Earned, game_state)
 
 # ideally this is for buildings/places, not people:
 def steal(game_state, Victim):
-	(People, Mess, Lock) = game_state
+	People = game_state.Characters()
 	if People['Rogue'].counter <= 0:
 		Money_Earned = 0
 		People['Rogue'].counter += 1
@@ -45,10 +49,11 @@ def steal(game_state, Victim):
 		People['Rogue'].Money += Money_Earned
 		People[Victim].Hidden_Money = 0
 		print("The Rogue stole from " + Victim + " for " + str(Money_Earned) + " zenny!!\n")
-	return (Money_Earned, (People, Mess, Lock))
+		game_state.set_Characters(People)
+	return (Money_Earned, game_state)
 
 def stealing_utility(game_state):
-	(People, _, _) = game_state
+	People = game_state.Characters()
 	max_money = 0
 	total_money = 0
 	victim = None
@@ -64,12 +69,13 @@ def stealing_utility(game_state):
 
 def default_action(game_state, N=None):
 	MAX_UTILITY = 10000000
-	(People, Mess, Lock) = game_state
+	People = game_state.Characters()
 	People['Rogue'].counter += 1
 	if People['Rogue'].counter >= 2:
 		print("I went to the dungeon and got eaten by a Troll.\n")
 		exit(0)
 	print("Waiting to go to dungeon...\n")
+	game_state.set_Characters(People)
 	return (MAX_UTILITY, game_state)
 
 def default_utility(game_state):
@@ -78,18 +84,20 @@ def default_utility(game_state):
 
 
 def ask(game_state, Person):
-	(People, Mess, Lock) = game_state
+	People = game_state.Characters()
 	print("The Rogue asks " + Person + " for money.")
 	if random.random() > 0.5:
 		print(Person + " replies, sure here you go!")
 		People['Rogue'].Money += 100
-		return (100, (People, Mess, Lock))
+		game_state.set_Characters(People)
+		return (100, game_state)
 	print(Person + " replies, GET AWAY YOU MONSTER.")
-	return (0, (People, Mess, Lock))
+	game_state.set_Characters(People)
+	return (0, game_state)
 
 
 def ask_utility(game_state):
-	(People, Mess, Lock) = game_state
+	People = game_state.Characters()
 	people_list = People.keys()
 	people_list.remove('Rogue')
 	victim = people_list[random.randint(0, len(people_list) - 1)]
@@ -120,12 +128,18 @@ def main():
 	Rogue.counter = 0
 	Rogue.Hidden_Money = 0
 
-	game_state = ({Rogue.name:Rogue, OldMan.name:OldMan, Tavern.name:Tavern}, None, None)
 
+	game_state = GameState({}, {Rogue.name:Rogue, OldMan.name:OldMan, Tavern.name:Tavern}, {})
+
+	# create a Dungeon Master thread:
+	DM = DungeonMaster(sys.stdin, sys.stdout)
+	DM_thread = threading.Thread(target=DM.life, args=(game_state,))
+	DM_thread.start()
 	# create an AI thread:
 	Rogue_thread = threading.Thread(target=Rogue.life, args=(game_state,))
 	Rogue_thread.start()
 	Rogue_thread.join()
+	DM_thread.join()
 	return 
 
 

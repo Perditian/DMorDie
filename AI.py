@@ -84,7 +84,7 @@ class AI:
 	# For now, messages are functions which take in the AI and Game State as parameters
 	# Good reason for polymorphic functions --> pass in NPCs or DM instead of AI
 	def handle_messages(self, game_state):
-		(Game, Messages,) = game_state
+		Messages = game_state.Messages()
 		my_mail = Messages.get_mail(self.__ID)
 		for fun in my_mail:
 			fun(self, game_state)
@@ -98,8 +98,6 @@ class AI:
 		action = self.decide_actions(goal, game_state)
 		# if there are no profitable actions to do, I kill myself:
 		if action is None:
-			return
-		(_, _, game_lock) = game_state 
-		#with game_lock:
+			return 
 		game_state = action.perform(game_state)
 		self.life(game_state)

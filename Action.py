@@ -4,6 +4,8 @@
  Creates, evaluates, and performs an action
  Note: Need a better reward/penalty system for updating probability of
  action success
+
+ TODO: MAKE UTILITY FUNCTION ~NEGATIVE SIGMOID
 """ 
 
 class Action:
@@ -50,7 +52,8 @@ class Action:
 	# and the corresponding arguments to trigger the maximum utility outcome.
 	# it also returns the total utility available for this action 
 	def expected(self, game_state):
-		(self.expected_utility, self.total_utility, self.action_args) = self.action_utility(game_state) 
+		(self.expected_utility, self.total_utility, self.action_args) = \
+		                        self.action_utility(game_state) 
 		self.expected_utility *= self.success
 		print ("This action has expected utility: " + str(self.expected_utility))
 		print ("This action has total utility: " + str(self.total_utility))
