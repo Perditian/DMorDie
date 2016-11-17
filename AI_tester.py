@@ -13,6 +13,8 @@ import random
 from DungeonMaster import DungeonMaster
 from GameState import GameState
 import sys
+from tkinter import * 
+from math import ceil
 
 def pickpocket_utility(game_state):
 	People = game_state.Characters()
@@ -20,7 +22,7 @@ def pickpocket_utility(game_state):
 	total_money = 0
 	victim = None
 	for (name, person) in People.items():
-		print(name + " has " + str(person.Money) + " zenny\n")
+		(name + " has " + str(person.Money) + " zenny\n")
 		if name != 'Rogue':
 			total_money += person.Money
 			if person.Money >= max_money:

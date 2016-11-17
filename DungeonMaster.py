@@ -13,7 +13,7 @@ import GameState
 import sys
 import re
 import time
-from Tkinter import * 
+from tkinter import * 
 from math import ceil
 
 class DungeonMaster: 
