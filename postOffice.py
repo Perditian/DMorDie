@@ -1,4 +1,4 @@
-import expiringMessage
+from expiringObject import ExpiringMessage
 import threading
 
 class PostOffice(object):
@@ -9,29 +9,29 @@ class PostOffice(object):
         self.addresses = []
         self.mutex = threading.Lock()
 
-    def add_name(self, PID):
+    def add_Name(self, PID):
         with self.mutex:
             self.PO_Boxes[PID] = []
             self.addresses.append(PID)
     
 
-    def send_message(self, sender, recipient, message, duration):
-        with self.mutex:
-            if recipient in self.PO_Boxes.keys():
+    def send_Expiring_Message(self, sender, recipient, message, duration):        
+        if sender in self.PO_Boxes and recipient in self.PO_Boxes:
+            with self.mutex:
                 msg = ExpiringMessage(sender, message, duration)
-                self.PO_Boxes.[recipient].append(msg)
-            else:
-                print "Attempted to send message to PID: "+ str(PID) + """ which
-                does not exist in PostOffice\n"""
+                self.PO_Boxes[recipient].append(msg)
+        else:
+            print "Attempted to send message to PID: "+ str(PID) + """ which
+            does not exist in PostOffice\n"""
 
     def send_Message(self, sender, recipient, message):        
-        msg = ExpiringMessage(sender, message, 0)
-        with self.mutex:
-            if recipient in self.PO_Boxes.keys():
-                self.PO_Boxes[recipient].append(message)
-            else:
-                print "Attempted to send message to PID: "+ str(PID) + """ which
-                does not exist in PostOffice\n"""
+        if sender in self.PO_Boxes and recipient in self.PO_Boxes:    
+            msg = ExpiringMessage(sender, message, 0)
+            with self.mutex:
+                self.PO_Boxes[recipient].append(msg)
+        else:
+            print "Attempted to send message to PID: "+ str(PID) + """ which
+            does not exist in PostOffice\n"""
 
     def get_Mail(self, recipient):
         with self.mutex:
