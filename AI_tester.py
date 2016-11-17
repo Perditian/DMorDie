@@ -139,7 +139,7 @@ def main():
 	Rogue_thread = threading.Thread(target=Rogue.life, args=(game_state,))
 	Rogue_thread.start()
 	Rogue_thread.join()
-	DM_thread.join()
+	# DM_thread.join()
 	return 
 
 

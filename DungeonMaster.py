@@ -12,6 +12,7 @@ import random
 import GameState
 import sys
 import re
+import time
 
 class DungeonMaster: 
 	#TODO: add Inventory
@@ -30,8 +31,8 @@ class DungeonMaster:
 	def get_command(self, command):
 		if re.match('i\s*\w*', command, re.I):
 			Name = re.split('\s*', command)
-			print(Name[len(Name) - 2])
-			return (self.interrupt, Name[len(Name) - 2])
+			print(Name[len(Name) - 1])
+			return (self.interrupt, Name[len(Name) - 1])
 		elif re.match('p\s*', command, re.I):
 			return (self.print_menu, None)
 		else:
@@ -73,14 +74,8 @@ class DungeonMaster:
 
 	# Loops until Game is over
 	def life(self, Game_State):
-		while True:
-			line = raw_input(">> ")
 			(fun, args) = self.get_command(line)
-			if (fun, args) == (None, None):
-				return self.life(Game_State)
 			if fun == self.interrupt:
 				self.interrupt(Game_State, args)
 			if fun == self.print_menu:
 				self.print_menu(Game_State)
-			sys.stdout.flush()
-		# self.life(Game_State)
