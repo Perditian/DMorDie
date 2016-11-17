@@ -17,9 +17,7 @@ import time
 class DungeonMaster: 
 	#TODO: add Inventory
 	# initializes the Dungeon Master with the given input and output streams
-	def __init__(self, Input, Output):
-		self.__in = Input
-		self.__out = Output
+	def __init__(self):
 		self.__Inventory = []
 		self.__Lock = threading.Lock()
 
