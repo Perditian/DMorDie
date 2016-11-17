@@ -132,14 +132,27 @@ def main():
 	game_state = GameState({}, {Rogue.name:Rogue, OldMan.name:OldMan, Tavern.name:Tavern}, {})
 
 	# create a Dungeon Master thread:
-	DM = DungeonMaster(sys.stdin, sys.stdout)
+	window = Tk()
+	window.geometry("1400x755")
+	DM = DungeonMaster(window)
 	DM_thread = threading.Thread(target=DM.life, args=(game_state,))
 	DM_thread.start()
+	window.mainloop()
 	# create an AI thread:
 	Rogue_thread = threading.Thread(target=Rogue.life, args=(game_state,))
 	Rogue_thread.start()
 	Rogue_thread.join()
 	# DM_thread.join()
+
+	#root = Tk()
+	#root.geometry("500x500")
+	#root2 = Tk()
+	#root2.geometry("1400x755")
+
+	#app = Window(root2)
+	#app2 = Window(root2)
+
+	#root2.mainloop()
 	return 
 
 
