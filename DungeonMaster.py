@@ -13,7 +13,7 @@ import GameState
 import sys
 import re
 import time
-from Tkinter import * 
+from tkinter import * 
 from math import ceil
 
 class DungeonMaster: 
@@ -23,7 +23,7 @@ class DungeonMaster:
 		self.numOfLines = 27
 
 		self.frame1 = Frame(master, height = 700, width = 690, bg = "#99ff99" )
-		self.divider = Frame(master, height = 755, width = 20, bd = 1, 
+		self.divider = Frame(master, height = 700, width = 20, bd = 1, 
 			relief = RAISED, padx=5, pady=5, bg = "#ccccff")
 		self.frame2 = Frame(master, height = 700, width = 690, bg = "#d9ff66")
 
@@ -31,30 +31,27 @@ class DungeonMaster:
 		self.divider.grid(row = 0, column = 1)
 		self.frame2.grid(row = 0, column = 2)
 
-		self.entry1 = Entry(self.frame1, width = 57, bg = "#ccccff", font = ("Courier New", 12))
+		self.entry1 = Entry(master, width = 121, bg = "#ccccff", font = ("Courier New", 12))
 		self.entry1.bind('<Return>', self.callback1_1)
-		self.entry1.grid(row = self.numOfLines+1, column = 0, ipady = 15, sticky = N)
-		self.entry2 = Entry(self.frame2, width = 57, bg = "#ccccff", font = ("Courier New", 12))
-		self.entry2.bind('<Return>', self.callback2_1)
-		self.entry2.grid(row = self.numOfLines+1, column = 0, ipady = 15)
+		self.entry1.grid(row = 1, column = 0, ipady = 15, columnspan = 3, sticky = W)
 
-		self.entryButton1 = Button(self.frame1, text="submit", width = 15,
+		self.entryButton1 = Button(master, text="submit", width = 15,
 			height = 2, command = self.callback1_2, bg = "#ccccff")
-		self.entryButton2 = Button(self.frame2, text="submit", width = 15,
-			height = 2, command = self.callback2_2, bg = "#ccccff")
-		self.entryButton1.grid(row = self.numOfLines+1, column = 1)
-		self.entryButton2.grid(row = self.numOfLines+1, column = 1)
+		self.entryButton1.grid(row = 1, column = 2, sticky = E)
+		
 
-		self.lines1 = [[Message(self.frame1, width = 600, bg = "#99ff99", font = ("Courier New", 12)), ""] for i in range(self.numOfLines)]
+		self.lines1 = [[Message(self.frame1, width = 640, bg = "#99ff99", font = ("Courier New", 12)), " " * 100] for i in range(self.numOfLines)]
 		i = self.numOfLines-1
 		for line in self.lines1:
 			line[0].grid(row = i, column = 0, sticky = W)
+			line[0].config(text = line[1])
 			i -= 1
 
-		self.lines2 = [[Message(self.frame2, width = 600, bg = "#d9ff66", font = ("Courier New", 12)), ""] for i in range(self.numOfLines)]
+		self.lines2 = [[Message(self.frame2, width = 640, bg = "#d9ff66", font = ("Courier New", 12)), " " * 100] for i in range(self.numOfLines)]
 		i = self.numOfLines-1
 		for line in self.lines2:
 			line[0].grid(row = i, column = 0, sticky = W)
+			line[0].config(text = line[1])
 			i -= 1
 		self.__Inventory = []
 		self.__Lock = threading.Lock()
@@ -69,7 +66,7 @@ class DungeonMaster:
 			return (self.print_menu, None)
 		else:
 			#print(self.__out, "I do not understand that command.\n")
-			self.displayText("I do not understand that command.\n", ">> ", 1)
+			self.displayText("I do not understand that command.", ">> ", 1)
 		return (None, None)
 
 	# interrupts the given Character
@@ -149,7 +146,7 @@ class DungeonMaster:
 
 
 	def displayText1(self, message):#, msgFrom):
-		for i in range(self.numOfLines-1, 0, -1):
+		for i in range(self.numOfLines-2, 0, -1):
 			lineAbove = self.lines1[i-1][1]
 			self.lines1[i][1] = lineAbove
 			self.lines1[i][0].config(text = lineAbove)
@@ -168,7 +165,7 @@ class DungeonMaster:
 		self.displayText(text, "You", 2)
 
 	def displayText2(self, message):
-		for i in range(self.numOfLines-1, 0, -1):
+		for i in range(self.numOfLines-2, 0, -1):
 			lineAbove = self.lines2[i-1][1]
 			self.lines2[i][1] = lineAbove
 			self.lines2[i][0].config(text = lineAbove)
