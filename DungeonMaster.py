@@ -78,8 +78,8 @@ class DungeonMaster:
 		People = self.Game_State.Characters()
 		self.displayText("I am interrupting " + People[Character].name, ">> ", 1)#, Character)
 		People[Character].Event.set()
-		People[Character].Event.clear()
 		self.displayText("Done interrupting " + People[Character].name, ">> ", 1)
+		People[Character].Event.clear()
 		return
 
 	# prints the menu
