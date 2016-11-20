@@ -18,11 +18,12 @@ from math import ceil
 
 def pickpocket_utility(game_state):
 	People = game_state.Characters()
+	Window = game_state.Window()
 	max_money = 0
 	total_money = 0
 	victim = None
 	for (name, person) in People.items():
-		(name + " has " + str(person.Money) + " zenny")
+		Window.displayText(name + " has " + str(person.Money) + " zenny", "", 2)
 		if name != 'Rogue':
 			total_money += person.Money
 			if person.Money >= max_money:
@@ -46,7 +47,7 @@ def pickpocket(game_state, Victim):
 		People['Rogue'].Money += Money_Earned
 		People[Victim].Money = 0
 		Window.displayText("The Rogue pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
-		People['Rogue'].Event.clear()
+		Window.displayText("The Rogue now has " + People['Rogue'].Money + " zenny", "<", 1)
 	game_state.set_Characters(People)
 	return (Money_Earned, game_state)
 
@@ -64,6 +65,7 @@ def steal(game_state, Victim):
 		People['Rogue'].Money += Money_Earned
 		People[Victim].Hidden_Money = 0
 		Window.displayText("The Rogue stole from " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+		Window.displayText("The Rogue now has " + People['Rogue'].Money + " zenny", "<", 1)
 		game_state.set_Characters(People)
 	return (Money_Earned, game_state)
 
@@ -109,6 +111,7 @@ def ask(game_state, Person):
 		Window.displayText("The Rogue asks " + Person + " for money.", "", 2)
 		Window.displayText(Person + " replies, sure here you go!", "", 2)
 		People['Rogue'].Money += 100
+		Window.displayText("The Rogue now has " + People['Rogue'].Money + " zenny", "<", 1)
 		game_state.set_Characters(People)
 		return (100, game_state)
 	else:
