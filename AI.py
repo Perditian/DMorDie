@@ -38,17 +38,18 @@ class AI:
 		self.name = Name
 		self.__lock = threading.Lock()
 		self.default = Default_Action
-		self.Event = threading.Event
+		self.Event = threading.Event()
 
 	# right now: determined completely randomly
 	# returns the set of actions for the decided goal
-	def decide_goal(self):
-		rand = random.randint(0, len(self.Goals) - 1)
-		goal = self.Goals.keys()
-		print("I decided to " + goal[rand])
-		goals = self.Goals.values()
+	def decide_goal(self, exclude = []):
+		goal  = self.Goals.keys()
+		goals = [self.Goals[x] for x in goal if x not in exclude]
+		names = [x for x in goal if x not in exclude]
+		rand  = random.randint(0, len(goals) - 1)
+		print("I decided to " + names[rand])
 		(w, goal_actions) = goals[rand]
-		return goal_actions
+		return (goal_actions, names[rand])
 
 	# decide actions based on the expected utility of the action, and the
 	# level of trust in the DM
@@ -57,20 +58,13 @@ class AI:
 	# myself.
 	def decide_actions(self, actions, game_state):
 		max_utility = 0
+		Window = game_state.Window()
 		best_action = None
 		for action in actions:
 			utility = action.expected(game_state) * self.DMtrust
-			if utility >= max_utility:
+			if utility > max_utility:
 				max_utility = utility
 				best_action = action
-		# if there are no profitable actions to do, do the default action.
-		# if there is no default action, kill myself.
-		if max_utility <= 0:
-			if self.default is None:
-				print("I'm going to the Dungeon!\nMoments later, I died...\n")
-				return None
-			else:
-				best_action = self.default
 		return best_action
 	
 	# used by other characters to lock this thread:
@@ -95,10 +89,17 @@ class AI:
 	def life(self, game_state):
 		# First Handle Messages, Resolve messages before proceeding
 		#handle_messages(self, game_state)
-		goal = self.decide_goal()
-		action = self.decide_actions(goal, game_state)
+		goalist = []
+		action = None
 		# if there are no profitable actions to do, I kill myself:
-		if action is None:
-			return 
+		while action is None:
+			if len(goalist) == len(self.Goals.keys()):
+				Window = game_state.Window()
+				Window.displayText("I went to the dungeon and got eaten by a troll.",
+					               "<", 2)
+				return
+			(goal, index) = self.decide_goal(goalist)
+			action = self.decide_actions(goal, game_state)
+			goalist.append(index)
 		game_state = action.perform(game_state)
 		self.life(game_state)

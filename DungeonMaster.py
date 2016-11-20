@@ -75,10 +75,10 @@ class DungeonMaster:
 	# one interrupt will be on the messaging queue.
 	def interrupt(self, Character):
 		# unlock the Character's Event
-		self.displayText("I am interrupting ", ">> ", 1)#, Character)
-		Person = (self.Game_State.Characters())[Character]
-		# Person.event.set()
-		self.displayText("Done interrupting " + Person.name, ">> ", 1)
+		People = self.Game_State.Characters()
+		self.displayText("I am interrupting " + People[Character].name, ">> ", 1)#, Character)
+		People[Character].Event.set()
+		self.displayText("Done interrupting " + People[Character].name, ">> ", 1)
 		return
 
 	# prints the menu
@@ -107,8 +107,11 @@ class DungeonMaster:
 		while True:
 			self.Game_State = Game_State
 
-
+    #######################################################################
+    #######################################################################
 	## WINDOW FUNCTIONS: ##################################################
+	#######################################################################
+	#######################################################################
 
 	def callback1_1(self, event):
 		text = self.entry1.get()

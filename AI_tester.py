@@ -22,7 +22,7 @@ def pickpocket_utility(game_state):
 	total_money = 0
 	victim = None
 	for (name, person) in People.items():
-		(name + " has " + str(person.Money) + " zenny\n")
+		(name + " has " + str(person.Money) + " zenny")
 		if name != 'Rogue':
 			total_money += person.Money
 			if person.Money >= max_money:
@@ -34,9 +34,19 @@ def pickpocket(game_state, Victim):
 	People = game_state.Characters()
 	Window = game_state.Window()
 	Money_Earned = People[Victim].Money
-	People['Rogue'].Money += Money_Earned
-	People[Victim].Money = 0
-	Window.displayText("The Rogue pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!\n", "", 2)
+	Window.displayText("The Rogue creeps up to " + Victim, "Rogue ", 2)
+	Window.displayText("The Rogue wants to pickpocket " + Victim, ">", 1)
+	Interrupted = People['Rogue'].Event.wait(5)
+	if Interrupted is False:
+		Window.displayText("The Rogue attempted to pickpocket " + Victim + 
+			               "; failed miserably, and lost 10gp.", ">>", 2)
+		People['Rogue'].Money -= 10
+		People['Rogue'].Money = min(0, People['Rogue'].Money)
+	else:
+		People['Rogue'].Money += Money_Earned
+		People[Victim].Money = 0
+		Window.displayText("The Rogue pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+		People['Rogue'].Event.clear()
 	game_state.set_Characters(People)
 	return (Money_Earned, game_state)
 
@@ -44,15 +54,16 @@ def pickpocket(game_state, Victim):
 def steal(game_state, Victim):
 	People = game_state.Characters()
 	Window = game_state.Window()
-	if People['Rogue'].counter <= 0:
+	Window.displayText("The Rogue sneaks up to " + Victim, "<", 2)
+	Window.displayText("The Rogue wants to steal from " + Victim, "<", 1)
+	if People['Rogue'].Event.wait(5) is False:
 		Money_Earned = 0
-		People['Rogue'].counter += 1
-		Window.displayText("Oh no! The Rogue got caught stealing :(\n", "", 2)
+		Window.displayText("Oh no! The Rogue got caught stealing :(", "", 2)
 	else:
 		Money_Earned = People[Victim].Hidden_Money
 		People['Rogue'].Money += Money_Earned
 		People[Victim].Hidden_Money = 0
-		Window.displayText("The Rogue stole from " + Victim + " for " + str(Money_Earned) + " zenny!!\n", "", 2)
+		Window.displayText("The Rogue stole from " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
 		game_state.set_Characters(People)
 	return (Money_Earned, game_state)
 
@@ -63,7 +74,7 @@ def stealing_utility(game_state):
 	total_money = 0
 	victim = None
 	for (name, person) in People.items():
-		Window.displayText(name + " has " + str(person.Hidden_Money) + " hidden zenny\n", "", 2)
+		Window.displayText(name + " has " + str(person.Hidden_Money) + " hidden zenny", "", 2)
 		if name != 'Rogue':
 			total_money += person.Hidden_Money
 			if person.Hidden_Money >= max_money:
@@ -78,9 +89,9 @@ def default_action(game_state, N=None):
 	Window = game_state.Window()
 	People['Rogue'].counter += 1
 	if People['Rogue'].counter >= 2:
-		displayText("I went to the dungeon and got eaten by a Troll.\n", "", 2)
+		Window.displayText("I went to the dungeon and got eaten by a Troll.", "", 2)
 		exit(0)
-	displayText("Waiting to go to dungeon...\n", "", 2)
+	Window.displayText("Waiting to go to dungeon...", "", 2)
 	game_state.set_Characters(People)
 	return (MAX_UTILITY, game_state)
 
@@ -92,14 +103,17 @@ def default_utility(game_state):
 def ask(game_state, Person):
 	People = game_state.Characters()
 	Window = game_state.Window()
-	Window.displayText("The Rogue asks " + Person + " for money.", "", 2)
-	if random.random() > 0.5:
+	Window.displayText("The Rogue walks up to " + Person, "<", 2)
+	Window.displayText("The Rogue wants to talk to " + Person, "<", 1)
+	if People['Rogue'].Event.wait(5):
+		Window.displayText("The Rogue asks " + Person + " for money.", "", 2)
 		Window.displayText(Person + " replies, sure here you go!", "", 2)
 		People['Rogue'].Money += 100
 		game_state.set_Characters(People)
 		return (100, game_state)
-	Window.displayText(Person + " replies, GET AWAY YOU MONSTER.", "", 2)
-	game_state.set_Characters(People)
+	else:
+		Window.displayText(Person + " replies, GET AWAY YOU MONSTER.", "", 2)
+		game_state.set_Characters(People)
 	return (0, game_state)
 
 
@@ -148,15 +162,18 @@ def main():
 	DM_thread = threading.Thread(target=DM.life, args=(game_state,))
 	DM_thread.start()
 
-	# start the window/game:
-	window.mainloop()
-
 	# create an AI thread:
 	Rogue_thread = threading.Thread(target=Rogue.life, args=(game_state,))
 	Rogue_thread.start()
+	
+	window.mainloop()
+
 	Rogue_thread.join()
 	DM_thread.join()
 
+
+	# start the window/game:
+	
 	#root = Tk()
 	#root.geometry("500x500")
 	#root2 = Tk()
