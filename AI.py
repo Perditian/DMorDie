@@ -38,6 +38,7 @@ class AI:
 		self.name = Name
 		self.__lock = threading.Lock()
 		self.default = Default_Action
+		self.Event = threading.Event
 
 	# right now: determined completely randomly
 	# returns the set of actions for the decided goal

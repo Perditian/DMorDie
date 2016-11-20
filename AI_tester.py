@@ -13,7 +13,7 @@ import random
 from DungeonMaster import DungeonMaster
 from GameState import GameState
 import sys
-from tkinter import * 
+from Tkinter import *
 from math import ceil
 
 def pickpocket_utility(game_state):
@@ -32,35 +32,38 @@ def pickpocket_utility(game_state):
 
 def pickpocket(game_state, Victim):
 	People = game_state.Characters()
+	Window = game_state.Window()
 	Money_Earned = People[Victim].Money
 	People['Rogue'].Money += Money_Earned
 	People[Victim].Money = 0
-	print("The Rogue pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!\n")
+	Window.displayText("The Rogue pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!\n", "", 2)
 	game_state.set_Characters(People)
 	return (Money_Earned, game_state)
 
 # ideally this is for buildings/places, not people:
 def steal(game_state, Victim):
 	People = game_state.Characters()
+	Window = game_state.Window()
 	if People['Rogue'].counter <= 0:
 		Money_Earned = 0
 		People['Rogue'].counter += 1
-		print("Oh no! The Rogue got caught stealing :(\n")
+		Window.displayText("Oh no! The Rogue got caught stealing :(\n", "", 2)
 	else:
 		Money_Earned = People[Victim].Hidden_Money
 		People['Rogue'].Money += Money_Earned
 		People[Victim].Hidden_Money = 0
-		print("The Rogue stole from " + Victim + " for " + str(Money_Earned) + " zenny!!\n")
+		Window.displayText("The Rogue stole from " + Victim + " for " + str(Money_Earned) + " zenny!!\n", "", 2)
 		game_state.set_Characters(People)
 	return (Money_Earned, game_state)
 
 def stealing_utility(game_state):
 	People = game_state.Characters()
+	Window = game_state.Window()
 	max_money = 0
 	total_money = 0
 	victim = None
 	for (name, person) in People.items():
-		print(name + " has " + str(person.Hidden_Money) + " hidden zenny\n")
+		Window.displayText(name + " has " + str(person.Hidden_Money) + " hidden zenny\n", "", 2)
 		if name != 'Rogue':
 			total_money += person.Hidden_Money
 			if person.Hidden_Money >= max_money:
@@ -72,11 +75,12 @@ def stealing_utility(game_state):
 def default_action(game_state, N=None):
 	MAX_UTILITY = 10000000
 	People = game_state.Characters()
+	Window = game_state.Window()
 	People['Rogue'].counter += 1
 	if People['Rogue'].counter >= 2:
-		print("I went to the dungeon and got eaten by a Troll.\n")
+		displayText("I went to the dungeon and got eaten by a Troll.\n", "", 2)
 		exit(0)
-	print("Waiting to go to dungeon...\n")
+	displayText("Waiting to go to dungeon...\n", "", 2)
 	game_state.set_Characters(People)
 	return (MAX_UTILITY, game_state)
 
@@ -87,13 +91,14 @@ def default_utility(game_state):
 
 def ask(game_state, Person):
 	People = game_state.Characters()
-	print("The Rogue asks " + Person + " for money.")
+	Window = game_state.Window()
+	Window.displayText("The Rogue asks " + Person + " for money.", "", 2)
 	if random.random() > 0.5:
-		print(Person + " replies, sure here you go!")
+		Window.displayText(Person + " replies, sure here you go!", "", 2)
 		People['Rogue'].Money += 100
 		game_state.set_Characters(People)
 		return (100, game_state)
-	print(Person + " replies, GET AWAY YOU MONSTER.")
+	Window.displayText(Person + " replies, GET AWAY YOU MONSTER.", "", 2)
 	game_state.set_Characters(People)
 	return (0, game_state)
 
@@ -130,21 +135,26 @@ def main():
 	Rogue.counter = 0
 	Rogue.Hidden_Money = 0
 
-
-	game_state = GameState({}, {Rogue.name:Rogue, OldMan.name:OldMan, Tavern.name:Tavern}, {})
-
-	# create a Dungeon Master thread:
+	# create the main window:
 	window = Tk()
 	window.geometry("1400x755")
 	DM = DungeonMaster(window)
+
+	game_state = GameState({}, {Rogue.name:Rogue, OldMan.name:OldMan, \
+		         Tavern.name:Tavern}, {}, DM)
+
+	# create the Dungeon Master thread:
 	DM_thread = threading.Thread(target=DM.life, args=(game_state,))
 	DM_thread.start()
+
+	# start the window/game:
 	window.mainloop()
+
 	# create an AI thread:
 	Rogue_thread = threading.Thread(target=Rogue.life, args=(game_state,))
 	Rogue_thread.start()
 	Rogue_thread.join()
-	# DM_thread.join()
+	DM_thread.join()
 
 	#root = Tk()
 	#root.geometry("500x500")

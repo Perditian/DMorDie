@@ -13,7 +13,7 @@ import GameState
 import sys
 import re
 import time
-from tkinter import * 
+from Tkinter import *
 from math import ceil
 
 class DungeonMaster: 
@@ -66,10 +66,10 @@ class DungeonMaster:
 			self.displayText(Name[len(Name) - 1], ">> ", 1)
 			return (self.interrupt, Name[len(Name) - 1])
 		elif re.match('p\s*', command, re.I):
-			return (self.print_menu, None)
+			return (self.print_menu, self.Game_State)
 		else:
 			#print(self.__out, "I do not understand that command.\n")
-			self.displayText("I do not understand that command.\n", ">> ", 1)
+			self.displayText("I do not understand that command.", ">> ", 1)
 		return (None, None)
 
 	# interrupts the given Character
@@ -81,7 +81,7 @@ class DungeonMaster:
 		self.displayText("I am interrupting ", ">> ", 1)#, Character)
 		Person = (self.Game_State.Characters())[Character]
 		# Person.event.set()
-		self.displayText("Done interrupting", ">> ", 1)
+		self.displayText("Done interrupting " + Person.name, ">> ", 1)
 		return
 
 	# prints the menu
@@ -107,8 +107,11 @@ class DungeonMaster:
 
 	# Loops until Game is over
 	def life(self, Game_State):
-		self.Game_State = Game_State
-		life(Game_State)
+		while True:
+			self.Game_State = Game_State
+
+
+	## WINDOW FUNCTIONS: ##################################################
 
 	def callback1_1(self, event):
 		text = self.entry1.get()
@@ -118,7 +121,7 @@ class DungeonMaster:
 		if fun == self.interrupt:
 				self.interrupt(args)
 		if fun == self.print_menu:
-				self.print_menu()
+				self.print_menu(args)
 
 	def callback1_2(self):
 		text = self.entry1.get()
@@ -128,14 +131,14 @@ class DungeonMaster:
 		if fun == self.interrupt:
 				self.interrupt(args)
 		if fun == self.print_menu:
-				self.print_menu()
+				self.print_menu(args)
 
 	def displayText(self, message, msgFrom, screen):
 		if (screen == 1) :
 			displayFunction = self.displayText1
 		elif (screen == 2):
 			displayFunction = self.displayText2
-		numLines = ceil((len(msgFrom) + 3 + len(message)) / 50)
+		numLines = int(ceil((len(msgFrom) + 3 + len(message)) / 50))
 		indent = " " * (len(msgFrom) + 2)
 
 		line = msgFrom + ": " + message[0:50]
