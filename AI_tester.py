@@ -137,7 +137,8 @@ def main():
 
 	# create the main window:
 	window = Tk()
-	window.geometry("1400x755")
+	window.geometry("1332x755")
+	window.config(bg = "#d9ff66")
 	DM = DungeonMaster(window)
 
 	game_state = GameState({}, {Rogue.name:Rogue, OldMan.name:OldMan, \
