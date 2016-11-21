@@ -14,10 +14,14 @@ class GameState(object):
 
 	def __init__(self, Messaging, Characters, Locations, Window):
 		self.__Characters = Characters
-		self.__Messages = Messaging
-		self.__Locations = Locations
-		self.__window = Window
-		self.__Lock = threading.Lock()
+		self.__Messages   = Messaging
+		self.__Locations  = Locations
+		self.__window     = Window
+		self.__Lock       = threading.Lock()
+		self.__Lock2      = threading.Lock()
+
+	def Lock(self):
+		return self.__Lock2
 
 	def Messages(self):
 		with self.__Lock:

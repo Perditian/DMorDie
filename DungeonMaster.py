@@ -56,6 +56,9 @@ class DungeonMaster:
 		self.__Inventory = []
 		self.__Lock = threading.Lock()
 
+	def set_GameState(self, gs):
+		self.Game_State = gs
+
 	# gets the next command
 	def get_command(self, command):
 		if re.match('i\s*\w*', command, re.I):
@@ -78,8 +81,8 @@ class DungeonMaster:
 		People = self.Game_State.Characters()
 		self.displayText("I am interrupting " + People[Character].name, ">> ", 1)#, Character)
 		People[Character].Event.set()
+		print People[Character].Event.is_set()
 		self.displayText("Done interrupting " + People[Character].name, ">> ", 1)
-		People[Character].Event.clear()
 		return
 
 	# prints the menu
@@ -103,10 +106,6 @@ class DungeonMaster:
 	def unlock_me():
 		self.__Lock.release()
 
-	# Loops until Game is over
-	def life(self, Game_State):
-		while True:
-			self.Game_State = Game_State
 
     #######################################################################
     #######################################################################

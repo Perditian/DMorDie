@@ -16,7 +16,7 @@ from math import ceil
 
 class Rogue(AI):
 
-	def __init__(self, Alignment = 'chaotic'):
+	def __init__(self, Alignment = 'chaotic', name = "Rogue"):
 		self.Alignment = Alignment
 		
 		Pickpocketing = Action(self.pickpocket, self.pickpocket_utility, 0.6)
@@ -27,7 +27,8 @@ class Rogue(AI):
 		Goals = ['Make Money', 'Ask']
 		Weights = [0.5, 0.5]
 		Actions = {str(0):[Pickpocketing, Stealing], str(1):[Asking]}
-		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, "Rogue")
+
+		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name)
 		self.Money = 0
 		self.counter = 0
 		self.Hidden_Money = 0
@@ -40,7 +41,7 @@ class Rogue(AI):
 		total_money = 0
 		victim = None
 		for (name, person) in People.items():
-			Window.displayText(name + " has " + str(person.Money) + " zenny", "", 2)
+			Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
 			if name != self.name:
 				total_money += person.Money
 				if person.Money >= max_money:
@@ -53,25 +54,25 @@ class Rogue(AI):
 		Window = game_state.Window()
 		Money_Earned = People[Victim].Money
 		Window.displayText("The " + self.name + " creeps up to " + Victim, self.name, 2)
-		Window.displayText("The Rogue wants to pickpocket " + Victim, ">", 1)
-		Interrupted = People[self.name].Event.wait(15)
-		if Interrupted is False:
+		Window.displayText("The " + self.name + " wants to pickpocket " + Victim, ">", 1)
+		if self.Event.wait(105) is False:
 			Window.displayText("The " + self.name + " attempted to pickpocket " + Victim + 
 				               "; failed miserably, and lost 10gp.", ">>", 2)
-			People[self.name].Money -= 10
-			People[self.name].Money = min(0, People[self.name].Money)
+			with game_state.Lock():
+				People[self.name].Money -= 10
+				People[self.name].Money = min(0, People[self.name].Money)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
-			self.Event.clear()
 		else:
-			People[self.name].Money += Money_Earned
-			People[Victim].Money = 0
-			Window.displayText("The " + self.name + "pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+			with game_state.Lock():
+				People[self.name].Money += Money_Earned
+				People[Victim].Money = 0
+			Window.displayText("The " + self.name + " pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
-		game_state.set_Characters(People)
+		self.Event.clear()
 		return (Money_Earned, game_state)
 
 	# ideally this is for buildings/places, not people:
@@ -79,23 +80,23 @@ class Rogue(AI):
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Window.displayText("The " + self.name +" sneaks up to " + Victim, "<", 2)
-		Window.displayText("The Rogue wants to steal from " + Victim, "<", 1)
-		if People[self.name].Event.wait(15) is False:
+		Window.displayText("The "+self.name +" wants to steal from " + Victim, "<", 1)
+		if self.Event.wait(105) is False:
 			Money_Earned = 0
 			Window.displayText("Oh no! The " + self.name + " got caught stealing :(", "", 2)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
-			self.Event.clear()
 		else:
 			Money_Earned = People[Victim].Hidden_Money
-			People[self.name].Money += Money_Earned
-			People[Victim].Hidden_Money = 0
+			with game_state.Lock():
+				People[self.name].Money += Money_Earned
+				People[Victim].Hidden_Money = 0
 			Window.displayText("The "+self.name+" stole from " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
-			Window.displayText("The Rogue now has " + str(People[self.name].Money) + " zenny", "<", 1)
-			game_state.set_Characters(People)
+			Window.displayText("The "+self.name+" now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
+		self.Event.clear()
 		return (Money_Earned, game_state)
 
 	def stealing_utility(self, game_state):
@@ -105,7 +106,7 @@ class Rogue(AI):
 		total_money = 0
 		victim = None
 		for (name, person) in People.items():
-			Window.displayText(name + " has " + str(person.Hidden_Money) + " hidden zenny", "", 2)
+			Window.displayText(name + " has " + str(person.Hidden_Money) + " hidden zenny", "", 1)
 			if name != self.name:
 				total_money += person.Hidden_Money
 				if person.Hidden_Money >= max_money:
@@ -136,12 +137,12 @@ class Rogue(AI):
 		Window = game_state.Window()
 		Window.displayText("The "+ self.name +" walks up to " + Person, "<", 2)
 		Window.displayText("The "+self.name+" wants to talk to " + Person, "<", 1)
-		if People[self.name].Event.wait(25):
+		if self.Event.wait(205) is True:
 			Window.displayText("The "+self.name+" asks " + Person + " for money.", "", 2)
 			Window.displayText(Person + " replies, sure here you go!", "", 2)
-			People[self.name].Money += 100
+			with game_state.Lock():
+				People[self.name].Money += 100
 			Window.displayText("The "+self.name+" now has " + str(People[self.name].Money) + " zenny", "<", 1)
-			game_state.set_Characters(People)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 			self.Event.clear()
@@ -149,9 +150,9 @@ class Rogue(AI):
 		else:
 			Window.displayText(Person + " replies, GET AWAY YOU MONSTER.", "", 2)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
-			game_state.set_Characters(People)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
+			self.Event.clear()
 		return (0, game_state)
 
 
@@ -160,5 +161,6 @@ class Rogue(AI):
 		people_list = People.keys()
 		people_list.remove(self.name)
 		victim = people_list[random.randint(0, len(people_list) - 1)]
-		return (random.random() * 100, random.random() * 100, victim)
+		#return (random.random() * 100, random.random() * 100, victim)
+		return (random.randint(0, 1), 1, victim)
 

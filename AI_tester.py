@@ -18,21 +18,22 @@ from Tkinter import *
 from math import ceil
 
 class NPC (AI):
-	OldMan = AI()
-	OldMan.name = 'The Old Man'
-	OldMan.Money = 100
-	OldMan.Hidden_Money = 0
-
 	
-def main():
+	def __init__(self, name = 'The Old Man'):
+		self.name = name
+		self.Money = 100
+		self.Hidden_Money = 0
 
-    
+
+def main():    
 	Tavern = AI()
 	Tavern.name = 'The Don\'t go Inn'
 	Tavern.Money = 0
 	Tavern.Hidden_Money = 150
 
 	rogue = Rogue('chaotic')
+	rogue1 = Rogue('good', 'Assasin')
+	OldMan = NPC()
 
 	# create the main window:
 	window = Tk()
@@ -40,21 +41,26 @@ def main():
 	window.config(bg = "#d9ff66")
 	DM = DungeonMaster(window)
 
-	game_state = GameState({}, {rogue.name:rogue, OldMan.name:OldMan, \
+	game_state = GameState({}, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan, \
 		         Tavern.name:Tavern}, {}, DM)
+	DM.set_GameState(game_state)
 
 	# create the Dungeon Master thread:
-	DM_thread = threading.Thread(target=DM.life, args=(game_state,))
-	DM_thread.start()
+	#DM_thread = threading.Thread(target=DM.life, args=(game_state,))
+	#DM_thread.start()
 
 	# create an AI thread:
 	Rogue_thread = threading.Thread(target=rogue.life, args=(game_state,))
 	Rogue_thread.start()
 
+#	Rogue_thread1 = threading.Thread(target=rogue1.life, args=(game_state,))
+#	Rogue_thread1.start()
+
 	window.mainloop()
 
 	Rogue_thread.join()
-	DM_thread.join()
+	Rogue_thread1.join()
+	#DM_thread.join()
 
 
 	# start the window/game:

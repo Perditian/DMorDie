@@ -57,8 +57,8 @@ class Action:
 		(self.expected_utility, self.total_utility, self.action_args) = \
 		                        self.action_utility(game_state) 
 		self.expected_utility *= self.success
-		Window.displayText("This action has expected utility: " + str(self.expected_utility),
-			               ">", 2)
-		Window.displayText("This action has total utility: " + str(self.total_utility),
-							">", 2)
+	#	Window.displayText("This action has expected utility: " + str(self.expected_utility),
+	#		               ">", 1)
+	#	Window.displayText("This action has total utility: " + str(self.total_utility),
+	#						">", 1)
 		return self.expected_utility
