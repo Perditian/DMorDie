@@ -14,7 +14,7 @@ import random
 from DungeonMaster import DungeonMaster
 from GameState import GameState
 import sys
-from Tkinter import *
+from tkinter import *
 from math import ceil
 
 class NPC (AI):

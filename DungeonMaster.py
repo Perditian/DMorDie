@@ -105,7 +105,7 @@ class DungeonMaster:
 		People = self.Game_State.Characters()
 		self.displayText("I am interrupting " + People[Character].name, ">> ", 1)#, Character)
 		People[Character].Event.set()
-		print People[Character].Event.is_set()
+		print (People[Character].Event.is_set())
 		self.displayText("Done interrupting " + People[Character].name, ">> ", 1)
 		return
 
@@ -155,7 +155,7 @@ class DungeonMaster:
 			self.displayText("Actions:", ">", 1)
 			self.displayText('i Name = Interrupt Name', ">>", 1)
 			self.displayText('p = Print Menu', ">> ", 1)
-			self.displayText("Inventory", ">>", 1)#self.__Inventory)
+			self.displayText("Inventory", ">", 1)#self.__Inventory)
 		else:
 		    self.displayText("not a command", "", 1)
 		self.entry1.unbind("<Return>")
