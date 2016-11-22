@@ -66,6 +66,7 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 		else:
 			with game_state.Lock():
+				Money_Earned = People[Victim].Money
 				People[self.name].Money += Money_Earned
 				People[Victim].Money = 0
 			Window.displayText("The " + self.name + " pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
@@ -77,6 +78,7 @@ class Rogue(AI):
 
 	# ideally this is for buildings/places, not people:
 	def steal(self, game_state, Victim):
+		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Window.displayText("The " + self.name +" sneaks up to " + Victim, "<", 2)
@@ -88,10 +90,10 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
-			Money_Earned = People[Victim].Hidden_Money
 			with game_state.Lock():
+				Money_Earned = Places[Victim].Hidden_Money
 				People[self.name].Money += Money_Earned
-				People[Victim].Hidden_Money = 0
+				Places[Victim].Hidden_Money = 0
 			Window.displayText("The "+self.name+" stole from " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
 			Window.displayText("The "+self.name+" now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
@@ -100,17 +102,17 @@ class Rogue(AI):
 		return (Money_Earned, game_state)
 
 	def stealing_utility(self, game_state):
-		People = game_state.Characters()
+		Places = game_state.Locations()
 		Window = game_state.Window()
 		max_money = 0
 		total_money = 0
 		victim = None
-		for (name, person) in People.items():
-			Window.displayText(name + " has " + str(person.Hidden_Money) + " hidden zenny", "", 1)
+		for (name, place) in Places.items():
+			Window.displayText(name + " has " + str(place.Hidden_Money) + " hidden zenny", "", 1)
 			if name != self.name:
-				total_money += person.Hidden_Money
-				if person.Hidden_Money >= max_money:
-					max_money = person.Hidden_Money
+				total_money += place.Hidden_Money
+				if place.Hidden_Money >= max_money:
+					max_money = place.Hidden_Money
 					victim = name
 		return (max_money, total_money, victim)
 
@@ -137,6 +139,8 @@ class Rogue(AI):
 		Window = game_state.Window()
 		Window.displayText("The "+ self.name +" walks up to " + Person, "<", 2)
 		Window.displayText("The "+self.name+" wants to talk to " + Person, "<", 1)
+		
+		"""
 		if self.Event.wait(205) is True:
 			Window.displayText("The "+self.name+" asks " + Person + " for money.", "", 2)
 			Window.displayText(Person + " replies, sure here you go!", "", 2)
@@ -153,6 +157,7 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 			self.Event.clear()
+		"""
 		return (0, game_state)
 
 

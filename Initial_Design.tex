@@ -102,33 +102,21 @@ with.
 \item [*] Handling contradictory events.
 \end{enumerate}
 
-\section*{Design Decisions}
+\section*{Design Decisions - Updated}
 
 Concurrent Messaging
 	\begin{enumerate}
 	\item[ ] Solutions:
 	\item[*] Use Threads for our PCs and NPCs, and a global messaging
-	      queue to communicate between threads
-	\item[*] Use the multiprocessing library to handle communication between
-		  NPCs and PCs, which are separate processes
-	\item[*] Use pyro to handle communication
-	\item[ ] \textbf{Chosen Solution:}
-	\item[*] We will use threads and a global messaging queue (a monitor), at 
-	      least for now,
-	      since this seems to be the best for local concurrency (not distributed)
-	      and the easiest to integrate with the rest of the game. For the queue,
-	      we will use a dictionary where each character has its own messaging 
-	      queue.
+	      queue to communicate between threads. This queue takes in expiring
+        messages
+  \item[*] We are also using the threading.Event class to represent interrupts
+           between the user (Dungeon Master) and the PCs.
 	\end{enumerate}
 Dialogue
 	\begin{enumerate}
 	\item[ ] Solutions:
-	\item[*] Use dialogue trees in XML format to represent branching choices
-	\item[*] Use a script-based representation, where each choice calls a 
-		  different function
-	\item[ ] \textbf{Chosen Solution:}
-	\item[*] We will use a script-based representation of dialogue because we have
-		  more experience using it and it lends itself well to many small interactions.
+	\item[*] Dialogues are functions passed to Player Character threads.
 	\end{enumerate}
 
 \section*{Class Diagrams}
@@ -165,8 +153,9 @@ Dialogue
         rounded corners,
     }
   }
-  [Dungeon Master Class
+  [GUI window class - integrates the GUI and the Dungeon Master
   	[User Input/Output]
+    [GUI Interface]
   ]
 \end{forest} \\ \\
 \textbf{Messaging:} \\ \\
@@ -180,11 +169,11 @@ Dialogue
         rounded corners,
     }
   }
-  [Message Queue
-  	[Queue of Actors - Field]
+  [Post Office
+  	[Expiring Message Queue - Field]
   ]
 \end{forest} \\ \\
-\textbf{Split Screen GUI:} \\ \\
+\textbf{Game State:} \\ \\
 \begin{forest}
   for tree={
     fit=band,% spaces the tree out a little to avoid collisions
@@ -195,7 +184,9 @@ Dialogue
         rounded corners,
     }
   }
-  [GUI Interface]
+  [Game State
+    [Dictionary of Actors, Post Office, Window/DM]
+  ]
   \end{forest} \\ \\ 
 
   The Game State will be a tuple containing a dictionary of all the AI and

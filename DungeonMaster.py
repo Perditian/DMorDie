@@ -54,7 +54,7 @@ class DungeonMaster:
 			line[0].config(text = line[1])
 			i -= 1
 		self.__Inventory = []
-		self.__Lock = threading.Lock()
+		self.__Lock  = threading.Lock()
 
 	def set_GameState(self, gs):
 		self.Game_State = gs
@@ -81,7 +81,6 @@ class DungeonMaster:
 		People = self.Game_State.Characters()
 		self.displayText("I am interrupting " + People[Character].name, ">> ", 1)#, Character)
 		People[Character].Event.set()
-		print People[Character].Event.is_set()
 		self.displayText("Done interrupting " + People[Character].name, ">> ", 1)
 		return
 
@@ -90,14 +89,14 @@ class DungeonMaster:
 		self.displayText("0 - Characters\n1 - Actions\n2 - Inventory\n3 - Everything\n", "", 1)
 		"""
 		if option in '0':
-				#self.displayText(self.Game_State.Characters.keys(), ">> ", 1)
+				#self.displayText(self.Game_State.Characters().keys(), ">> ", 1)
 		elif option in '1':
 				#self.displayText('i Name = Interrupt Name\np = Print Menu', ">> ", 1)
 		elif option in '2':
 				#self.displayText(self.__Inventory)
 		elif option in '3':
 				#print(Game_State.Characters, '\ni Name = Interrupt Name\np = Print Menu\n',
-				 #      self.__Inventory)
+				#      self.__Inventory)
 		"""
 		return
 
@@ -105,6 +104,12 @@ class DungeonMaster:
 		self.__Lock.acquire()
 	def unlock_me():
 		self.__Lock.release()
+
+	def life(self, Game_State):
+		while True:
+			for (name, char)  in Game_State.Characters().items():
+				print(name + " money: " + str(char.Money) + " event flag: " + str(char.Event.is_set()))
+		
 
 
     #######################################################################
@@ -143,12 +148,13 @@ class DungeonMaster:
 
 		line = msgFrom + ": " + message[0:50]
 		displayFunction(line)
-		for i in range(numLines-3):	 
+		for i in range(numLines-2):	 
 			line = indent + message[50*(i+1):50*(i+2)]
 			displayFunction(line)
 		if (numLines > 1):
 			line = indent + message[(numLines-1)*50:len(message)]
 			displayFunction(line)
+		
 
 
 	def displayText1(self, message):#, msgFrom):

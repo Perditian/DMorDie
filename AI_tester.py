@@ -20,6 +20,7 @@ from math import ceil
 class NPC (AI):
 	
 	def __init__(self, name = 'The Old Man'):
+		AI.__init__(self)
 		self.name = name
 		self.Money = 100
 		self.Hidden_Money = 0
@@ -41,8 +42,17 @@ def main():
 	window.config(bg = "#d9ff66")
 	DM = DungeonMaster(window)
 
-	game_state = GameState({}, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan, \
-		         Tavern.name:Tavern}, {}, DM)
+	# opening prompt:
+	prompt  = "Hello Dungeon Master, welcome to your new campaign! There is a " 
+	prompt1 = "Rogue for you to interrupt (i). You can also print (p) a list of"
+	prompt2 = " characters and actions if you forget. Spelling counts!"
+
+	DM.displayText(prompt, "", 1)
+	DM.displayText(prompt1, "", 1)
+	DM.displayText(prompt2, "", 1)
+
+	game_state = GameState({}, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan},
+		         {Tavern.name:Tavern}, DM)
 	DM.set_GameState(game_state)
 
 	# create the Dungeon Master thread:
@@ -53,13 +63,14 @@ def main():
 	Rogue_thread = threading.Thread(target=rogue.life, args=(game_state,))
 	Rogue_thread.start()
 
-#	Rogue_thread1 = threading.Thread(target=rogue1.life, args=(game_state,))
-#	Rogue_thread1.start()
+	Rogue_thread1 = threading.Thread(target=rogue1.life, args=(game_state,))
+	Rogue_thread1.start()
 
 	window.mainloop()
 
 	Rogue_thread.join()
 	Rogue_thread1.join()
+	
 	#DM_thread.join()
 
 
@@ -75,10 +86,6 @@ def main():
 
 	#root2.mainloop()
 	return 
-
-
-
-
 
 
 if __name__ == '__main__':
