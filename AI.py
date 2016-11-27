@@ -36,7 +36,7 @@ class AI:
 		self.Goals = goals
 		self.DMtrust = Trust
 		self.name = Name
-		self.__lock = threading.Lock()
+		self.Lock = threading.Lock()
 		self.default = Default_Action
 		self.Event = threading.Event()
 		self.InternalEvent = threading.Event()
@@ -70,11 +70,11 @@ class AI:
 	
 	# used by other characters to lock this thread:
 	def lock_me():
-		self.__lock.acquire()
+		self.Lock.acquire()
 		
 	# used by other characters to unlock this thread:
 	def unlock_me():
-		self.__lock.release()
+		self.Lock.release()
 	
 	# NOTE: this assumes a message-handling class that is passed with the game_state
 	# For now, messages are functions which take in the AI and Game State as parameters
@@ -102,5 +102,6 @@ class AI:
 			(goal, index) = self.decide_goal(goalist)
 			action = self.decide_actions(goal, game_state)
 			goalist.append(index)
-		game_state = action.perform(game_state)
+		with self.Lock:
+			game_state = action.perform(game_state)
 		self.life(game_state)

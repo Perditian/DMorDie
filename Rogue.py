@@ -11,8 +11,12 @@ import random
 from DungeonMaster import DungeonMaster
 from GameState import GameState
 import sys
-from tkinter import *
 from math import ceil
+
+LONGWAIT = 15
+SHORTWAIT = 10
+REALLYSHORTWAIT = 5
+
 
 class Rogue(AI):
 
@@ -41,7 +45,7 @@ class Rogue(AI):
 		total_money = 0
 		victim = None
 		for (name, person) in People.items():
-			Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
+		#	Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
 			if name != self.name:
 				total_money += person.Money
 				if person.Money >= max_money:
@@ -49,15 +53,23 @@ class Rogue(AI):
 					victim = name
 		return (max_money, total_money, victim)
 
+	def success_or_fail(self, Window, prompt = None):
+		Window.print_options({'s':'success', 'f':'failure'}, prompt)
+		if Window.Event.wait(LONGWAIT) is True:
+			Window.Event.clear()
+			if Window.command == 's':
+				return True
+		return False
+
 	def pickpocket(self, game_state, Victim):
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Money_Earned = People[Victim].Money
 		Window.displayText("The " + self.name + " creeps up to " + Victim, self.name, 2)
 		Window.displayText("The " + self.name + " wants to pickpocket " + Victim, ">", 1)
-		if self.Event.wait(105) is False:
-			Window.displayText("The " + self.name + " attempted to pickpocket " + Victim + 
-				               "; failed miserably, and lost 10gp.", ">>", 2)
+		if self.Event.wait(SHORTWAIT) is False:
+			Window.displayText("The " + self.name + " attempted to pickpocket " + Victim, ">>", 2)
+			Window.displayText("And failed miserably. They lost 10gp.", ">>", 2)
 			with game_state.Lock():
 				People[self.name].Money -= 10
 				People[self.name].Money = min(0, People[self.name].Money)
@@ -65,11 +77,15 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
-			with game_state.Lock():
-				Money_Earned = People[Victim].Money
-				People[self.name].Money += Money_Earned
-				People[Victim].Money = 0
-			Window.displayText("The " + self.name + " pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+			cmd = self.success_or_fail(Window, "Does the " + self.name + " succeed?")
+			if cmd:
+				with game_state.Lock():
+					Money_Earned = People[Victim].Money
+					People[self.name].Money += Money_Earned
+					People[Victim].Money = 0
+				Window.displayText("The " + self.name + " pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+			else:
+				Window.displayText("The " + self.name + " failed!!", "", 2)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
@@ -83,18 +99,23 @@ class Rogue(AI):
 		Window = game_state.Window()
 		Window.displayText("The " + self.name +" sneaks up to " + Victim, "<", 2)
 		Window.displayText("The "+self.name +" wants to steal from " + Victim, "<", 1)
-		if self.Event.wait(105) is False:
+		if self.Event.wait(SHORTWAIT) is False:
 			Money_Earned = 0
 			Window.displayText("Oh no! The " + self.name + " got caught stealing :(", "", 2)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
-			with game_state.Lock():
-				Money_Earned = Places[Victim].Hidden_Money
-				People[self.name].Money += Money_Earned
-				Places[Victim].Hidden_Money = 0
-			Window.displayText("The "+self.name+" stole from " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+			cmd = self.success_or_fail(Window, "Does the " + self.name + " succeed?")
+			if cmd:
+				with game_state.Lock():
+					Money_Earned = Places[Victim].Hidden_Money
+					People[self.name].Money += Money_Earned
+					Places[Victim].Hidden_Money = 0
+				Window.displayText("The "+self.name+" stole from " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+			else:
+				Money_Earned = 0
+				Window.displayText("The "+self.name+" failed!!", "", 2)
 			Window.displayText("The "+self.name+" now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
@@ -108,7 +129,7 @@ class Rogue(AI):
 		total_money = 0
 		victim = None
 		for (name, place) in Places.items():
-			Window.displayText(name + " has " + str(place.Hidden_Money) + " hidden zenny", "", 1)
+#			Window.displayText(name + " has " + str(place.Hidden_Money) + " hidden zenny", "", 1)
 			if name != self.name:
 				total_money += place.Hidden_Money
 				if place.Hidden_Money >= max_money:
@@ -134,30 +155,77 @@ class Rogue(AI):
 		return (MAX_UTILITY, MAX_UTILITY)
 
 
+
+	def plead_for_money(self, Window, Person):
+		if self.Alignment == "chaotic":
+			Window.displayText("Fine, didn't like you much anyway.", self.name, 2)
+		else:
+			Window.displayText("No! Please! I'm desperate for cash!", self.name, 2)
+			Window.displayText("I'll do anything! ANYTHING.", self.name, 2)
+			Window.displayText("Urgh, fine. There's a dragon.", Person, 2)
+			Window.displayText("Go slay it, and I MIGHT give ye a coin or two.", Person, 2)
+			Window.displayText("The " +self.name+" considers the offer...", "", 2)
+			Window.displayText("", "", 2)
+			Window.displayText("", "", 2)
+		return
+
+
 	def ask(self, game_state, Person):
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Window.displayText("The "+ self.name +" walks up to " + Person, "<", 2)
 		Window.displayText("The "+self.name+" wants to talk to " + Person, "<", 1)
-		
-		"""
-		if self.Event.wait(205) is True:
-			Window.displayText("The "+self.name+" asks " + Person + " for money.", "", 2)
-			Window.displayText(Person + " replies, sure here you go!", "", 2)
-			with game_state.Lock():
-				People[self.name].Money += 100
-			Window.displayText("The "+self.name+" now has " + str(People[self.name].Money) + " zenny", "<", 1)
-			Window.displayText("", "", 2)
-			Window.displayText("", "", 2)
-			self.Event.clear()
-			return (100, game_state)
-		else:
-			Window.displayText(Person + " replies, GET AWAY YOU MONSTER.", "", 2)
-			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
-			Window.displayText("", "", 2)
-			Window.displayText("", "", 2)
-			self.Event.clear()
-		"""
+		if self.Event.wait(SHORTWAIT) is False:
+			Window.displayText(Person + " ignores the " + self.name, "", 2)
+			return (0, game_state)
+		self.Event.clear()
+		Window.displayText("The "+self.name+" waits for "+Person+" to respond.", "", 2)
+		with People[Person].Lock:
+			Window.displayText("The "+Person+" turns to the "+self.name, "", 2)
+			prompt = "How should " + Person + " greet the " + self.name +"?"
+			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + self.name + "! Get away from me!!"}
+			Window.print_options(dic, prompt)
+			if Window.Event.wait(LONGWAIT) is True:
+				Window.Event.clear()
+				if Window.command == "0":
+					Window.displayText("Well Hello there, weary Traveler.", Person, 2)
+					Window.displayText("What brings you to this flashy " + Person +"?", Person, 2)
+
+					if self.Alignment == "chaotic":
+						Window.displayText("Need some money, bro.", self.name, 2)
+						dic0 = "Got gold for ye, but there's a price..."
+						extended0 = [(Person, "I got some gold for ye, but"), (Person, "it comes with a price."), \
+									(self.name, "...I need to pay for free money?"), (Person, "Aie, not with ye gold," ),(Person, "but with ye body."), \
+									(self.name, "WHAT?!"), (Person, "There's a dragon need'n some slay'n."),(Person," You do that, you get me gold."), \
+									(self.name, "Oh, that's what you meant..."),(self.name, "I'll consider it.")]
+					else:
+						Window.displayText("Yo, you got any quests with rewards?", self.name, 2)
+						dic0 = "There's a dragon need'n some slay'n"
+						extended0 = [(Person, "You in need of quest? Har Har Har!"),(Person," A quest I got for ye."), \
+						             (Person, "I heard there's a violent,"),(Person,"vicious dragon haunting the land"), \
+						             (Person, "Slay that beast, and I'll give ye my thanks."), \
+						             (Person, "..also some gold, I guess."), (self.name, "Many thanks, my good " + Person +", I'll kill it immediately!")]
+					prompt = "How should " + Person + " respond?"
+					dic.clear()
+					dic = {"0":dic0, "1":"You know what? I don't like your attitude."}
+					Window.print_options(dic, prompt)
+					if Window.Event.wait(LONGWAIT) is True:
+						Window.Event.clear()
+						if Window.command == "0":
+							for (speaker, dialogue) in extended0:
+								Window.displayText(dialogue, speaker, 2)
+						else:
+							Window.displayText("You know what? You're too shady.", Person, 2)
+							Window.displayText("I don't deal with sketchy characters.", Person, 2)
+							self.plead_for_money(Window, Person)
+				else:
+					Window.displayText("GAARGHH?!! You foul " + self.name + ".", Person, 2)
+					Window.displayText("I have no business with you.", Person, 2)
+					self.plead_for_money(Window, Person)
+			else:
+				Window.displayText(Person + " ignores the " + self.name, "", 2)
+		Window.displayText("", "", 2)
+		Window.displayText("", "", 2)
 		return (0, game_state)
 
 

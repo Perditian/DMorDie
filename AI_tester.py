@@ -14,7 +14,7 @@ import random
 from DungeonMaster import DungeonMaster
 from GameState import GameState
 import sys
-from tkinter import *
+from Tkinter import *
 from math import ceil
 
 class NPC (AI):
@@ -43,31 +43,47 @@ def main():
 	DM = DungeonMaster(window)
 
 	# opening prompt:
-	prompt  = "Hello Dungeon Master, welcome to your new campaign! There is a " 
-	prompt1 = "Rogue for you to interrupt (i). You can also print (p) a list of"
-	prompt2 = " characters and actions if you forget. Spelling counts!"
+	prompt  = "Hi Dungeon Master, welcome to your new campaign!"
+	prompt0 = "There are characters for you to interrupt (i). You can"
+	prompt1 = "also print (p) a list of characters and actions "
+	prompt2 = "if you forget. Spelling counts!"
 
 	DM.displayText(prompt, "", 1)
+	DM.displayText(prompt0, "", 1)
 	DM.displayText(prompt1, "", 1)
 	DM.displayText(prompt2, "", 1)
 
 	game_state = GameState({}, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan},
 		         {Tavern.name:Tavern}, DM)
+
 	DM.set_GameState(game_state)
 
 	# create the Dungeon Master thread:
 	#DM_thread = threading.Thread(target=DM.life, args=(game_state,))
 	#DM_thread.start()
 
+	# this "ensures" that the window will be open before the threads start
+	# writing to it.
+	def start_with_delay(thread):
+			thread.start()
+			return
+
 	# create an AI thread:
 	Rogue_thread = threading.Thread(target=rogue.life, args=(game_state,))
-	Rogue_thread.start()
+	Rouge_delay = threading.Timer(1.0, start_with_delay, [Rogue_thread])
+	Rouge_delay.start()
+	#Rogue_thread.start()
 
 	Rogue_thread1 = threading.Thread(target=rogue1.life, args=(game_state,))
-	Rogue_thread1.start()
+	Rouge_delay1 = threading.Timer(1.0, start_with_delay, [Rogue_thread1])
+	Rouge_delay1.start()
+	# Rogue_thread1.start()
 
-	window.mainloop()
+	Window_thread = threading.Thread(target=window.mainloop())
+	Window_thread.start()
 
+
+	Window_thread.join()
 	Rogue_thread.join()
 	Rogue_thread1.join()
 	

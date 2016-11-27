@@ -27,7 +27,7 @@ class Action:
 	def perform(self, game_state):
 		Window = game_state.Window()
 		(actual_utility, game_state) = self.action(game_state, self.action_args)
-		Window.displayText("My success: " + str(self.success), ">", 2)
+		#Window.displayText("My success: " + str(self.success), ">", 2)
 		amount = 0
 		if self.total_utility != 0:
 			amount = actual_utility / self.total_utility
@@ -38,14 +38,14 @@ class Action:
 			return game_state
 		elif actual_utility >= self.expected_utility:
 			# increase success by amount of success:
-			Window.displayText("I succeeded by: " + str(amount), ">", 2)
+		#	Window.displayText("I succeeded by: " + str(amount), ">", 2)
 			self.success = min(1.0, self.success * (1 + amount))
 		else:
 			# decrease success by amount of failure:
 			# Note: there is always a miniscule chance of success!
-			Window.displayText("I failed by: " + str(amount), ">", 2)
+		#	Window.displayText("I failed by: " + str(amount), ">", 2)
 			self.success = max(0.001, self.success *  amount)
-		Window.displayText("My new success: " + str(self.success), ">", 2)
+		#Window.displayText("My new success: " + str(self.success), ">", 2)
 		return game_state
 
 	# save the expected utility calculation and returns it.

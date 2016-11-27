@@ -5,11 +5,7 @@
 TODO: add Messaging
 """ 
 
-from AI import AI 
-from Action import Action
 import threading
-import random
-
 class GameState(object):
 
 	def __init__(self, Messaging, Characters, Locations, Window):

@@ -13,7 +13,14 @@ import GameState
 import sys
 import re
 import time
-from tkinter import *
+
+try:
+    # for Python2
+    from Tkinter import *
+except ImportError:
+    # for Python3
+    from tkinter import *
+
 from math import ceil
 import threading
 
@@ -77,14 +84,11 @@ class DungeonMaster:
 			line[0].config(text = line[1])
 			i -= 1
 		self.__Inventory = []
-<<<<<<< HEAD
-		self.__Lock  = threading.Lock()
-=======
 		self.__Lock = threading.Lock()
 		self.screen1Lock = threading.Lock()
 		self.screen2Lock = threading.Lock()
+		self.Event = threading.Event()
 		self.command = ""
->>>>>>> 866cf041ca6921c01478d2d33af5b36515ba2842
 
 
 	# gets the next command
@@ -107,19 +111,18 @@ class DungeonMaster:
 	def interrupt(self, Character):
 		# unlock the Character's Event
 		People = self.Game_State.Characters()
-		self.displayText("I am interrupting " + People[Character].name, ">> ", 1)#, Character)
 		People[Character].Event.set()
-		self.displayText("Done interrupting " + People[Character].name, ">> ", 1)
 		return
 
-	def print_options(self, dictionary):
-		self.displayText("select a command:", ">", 1)
+	def print_options(self, dictionary, prompt = "select a command:"):
+		#with self.screen1Lock:
+		self.displayText(prompt, ">", 1)
 		self.entry1.unbind("<Return>")
 		for key in dictionary:
 			self.displayText((key + " - " + dictionary[key]), "", 1)
 		self.entry1.bind("<Return>", self.get_option)
 		return
-		#self.entry1.bind("<Return>", lambda event, dictionary = dictionary: self.get_option(dictionary))
+			#self.entry1.bind("<Return>", lambda event, dictionary = dictionary: self.get_option(dictionary))
 
 	def get_option(self, event):
 		text = self.entry1.get()
@@ -127,24 +130,11 @@ class DungeonMaster:
 		self.command = text
 		self.entry1.unbind("<Return>")
 		self.entry1.bind("<Return>", self.callback1_1)
+		self.Event.set()
 		return
 
 	# prints the menu
 	def print_menu(self, Game_State):
-<<<<<<< HEAD
-		self.displayText("0 - Characters\n1 - Actions\n2 - Inventory\n3 - Everything\n", "", 1)
-		"""
-		if option in '0':
-				#self.displayText(self.Game_State.Characters().keys(), ">> ", 1)
-		elif option in '1':
-				#self.displayText('i Name = Interrupt Name\np = Print Menu', ">> ", 1)
-		elif option in '2':
-				#self.displayText(self.__Inventory)
-		elif option in '3':
-				#print(Game_State.Characters, '\ni Name = Interrupt Name\np = Print Menu\n',
-				#      self.__Inventory)
-		"""
-=======
 		self.displayText("0 - Characters", "    ", 1)
 		self.displayText("1 - Actions", "    ", 1)
 		self.displayText("2 - Inventory", "    ", 1)
@@ -177,7 +167,6 @@ class DungeonMaster:
 		    self.displayText("not a command", "", 1)
 		self.entry1.unbind("<Return>")
 		self.entry1.bind("<Return>", self.callback1_1)
->>>>>>> 866cf041ca6921c01478d2d33af5b36515ba2842
 		return
 
 	def lock_me():
@@ -185,20 +174,10 @@ class DungeonMaster:
 	def unlock_me():
 		self.__Lock.release()
 
-<<<<<<< HEAD
-	def life(self, Game_State):
-		while True:
-			for (name, char)  in Game_State.Characters().items():
-				print(name + " money: " + str(char.Money) + " event flag: " + str(char.Event.is_set()))
-		
-
-
-=======
 	# Loops until Game is over
 	def set_GameState(self, gs):
 		self.Game_State = gs
-	
->>>>>>> 866cf041ca6921c01478d2d33af5b36515ba2842
+
     #######################################################################
     #######################################################################
 	## WINDOW FUNCTIONS: ##################################################
@@ -235,19 +214,15 @@ class DungeonMaster:
 		numLines = int(ceil((len(msgFrom) + 3 + len(message)) / 50))
 		indent = " " * (len(msgFrom) + 2)
 		line = msgFrom + ": " + message[0:50]
-		lock.acquire()
-		displayFunction(line)
-		for i in range(numLines-2):	 
-			line = indent + message[50*(i+1):50*(i+2)]
+		with lock:
 			displayFunction(line)
-		if (numLines > 1):
-			line = indent + message[(numLines-1)*50:len(message)]
-			displayFunction(line)
-<<<<<<< HEAD
+			for i in range(numLines-2):	 
+				line = indent + message[50*(i+1):50*(i+2)]
+				displayFunction(line)
+			if (numLines > 1):
+				line = indent + message[(numLines-1)*50:len(message)]
+				displayFunction(line)
 		
-=======
-		lock.release()
->>>>>>> 866cf041ca6921c01478d2d33af5b36515ba2842
 
 
 	def displayText1(self, message):#, msgFrom):
