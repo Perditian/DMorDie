@@ -12,6 +12,7 @@ from DungeonMaster import DungeonMaster
 from GameState import GameState
 import sys
 from math import ceil
+import time
 
 LONGWAIT = 15
 SHORTWAIT = 10
@@ -20,9 +21,15 @@ REALLYSHORTWAIT = 5
 
 class Rogue(AI):
 
-	def __init__(self, Alignment = 'chaotic', name = "Rogue"):
-		self.Alignment = Alignment
-		
+	def __init__(self, Alignment = 0, name = "Rogue"):
+		if Alignment is 0:
+			self.Alignment = 'chaotic'
+			self.sleight = 5
+			self.persuasion = 3
+		else:
+			self.Alignment = 'good'
+			self.sleight = 3
+			self.persuasion = 5
 		Pickpocketing = Action(self.pickpocket, self.pickpocket_utility, 0.6)
 		Default = Action(self.default_action, self.default_utility, 1)
 		Stealing = Action(self.steal, self.stealing_utility, 0.4)
@@ -32,11 +39,12 @@ class Rogue(AI):
 		Weights = [0.5, 0.5]
 		Actions = {str(0):[Pickpocketing, Stealing], str(1):[Asking]}
 
-		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name)
+		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 10, True)
 		self.Money = 0
 		self.counter = 0
 		self.Hidden_Money = 0
-
+		self.lounge = False
+	
 
 	def pickpocket_utility(self, game_state):
 		People = game_state.Characters()
@@ -77,7 +85,9 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
-			cmd = self.success_or_fail(Window, "Does the " + self.name + " succeed?")
+			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
+			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
+			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
 				with game_state.Lock():
 					Money_Earned = People[Victim].Money
@@ -106,7 +116,9 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
-			cmd = self.success_or_fail(Window, "Does the " + self.name + " succeed?")
+			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
+			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
+			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
 				with game_state.Lock():
 					Money_Earned = Places[Victim].Hidden_Money
@@ -167,6 +179,7 @@ class Rogue(AI):
 			Window.displayText("The " +self.name+" considers the offer...", "", 2)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
+			self.ready2battle.set()
 		return
 
 
@@ -180,6 +193,10 @@ class Rogue(AI):
 			return (0, game_state)
 		self.Event.clear()
 		Window.displayText("The "+self.name+" waits for "+Person+" to respond.", "", 2)
+
+		"""
+		NOTE: THIS COULD MAKE A DEADLOCK HAPPEN:
+		"""
 		with People[Person].Lock:
 			Window.displayText("The "+Person+" turns to the "+self.name, "", 2)
 			prompt = "How should " + Person + " greet the " + self.name +"?"
@@ -214,6 +231,7 @@ class Rogue(AI):
 						if Window.command == "0":
 							for (speaker, dialogue) in extended0:
 								Window.displayText(dialogue, speaker, 2)
+							self.ready2battle.set()
 						else:
 							Window.displayText("You know what? You're too shady.", Person, 2)
 							Window.displayText("I don't deal with sketchy characters.", Person, 2)
@@ -236,4 +254,128 @@ class Rogue(AI):
 		victim = people_list[random.randint(0, len(people_list) - 1)]
 		#return (random.random() * 100, random.random() * 100, victim)
 		return (random.randint(0, 1), 1, victim)
+
+
+	def attack(self, finished, Monster, game_state):
+		self.Event.clear()
+		Window = game_state.Window()
+		if self.lounge is True:
+			Window.displayText(self.name +" lounges in the back, doing nothing.", "", 2)
+			return
+		if self.health < 5:
+			Window.displayText(self.name + " is breathing heavily; their face is scrunched up, blood drenching their clothes.", "", 2)
+
+		if random.random() < 0.5:
+			Window.displayText(self.name + " becomes invisible, inching towards the " + Monster.name + "'s pile of gold.", "", 2)
+			Window.displayText(self.name + " wants to steal from the " + Monster.name, "", 1)
+			if self.Event.wait(LONGWAIT) is False:
+				self.Event.clear()
+				Window.displayText(self.name + " tries to do something, fails, and hurts themself.", "", 2)
+				self.health -= 2
+				return
+			self.Event.clear()
+			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
+			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
+			dic = {"s":"success", "f":"failure"}
+			Window.print_options(dic, prompt)
+			if Window.Event.wait(LONGWAIT) is True:
+				Window.Event.clear()
+				if Window.command is "s":
+					Window.displayText(self.name+ " steals 10gp from "+ Monster.name, "", 2)
+					Window.displayText("ROAAARRRWR!! Me Gold!! Not me Gold!!", Monster.name, 2)
+					Window.displayText(Monster.name+" bites their lip in disgust; their teeth pierce their skin and draw blood.", "", 2)
+					with game_state.Lock():
+						self.Money += 10
+					with Monster.Lock():
+						Monster.health -= 10
+						if Monster.health <= 0:
+							finished.set()
+				else:
+					if roll > 15:
+						Window.displayText(self.name + " glares at the Dungeon Master |:<", "", 1)
+					Window.displayText("Swiper no swiping!", Monster.name, 2)
+					Window.displayText("Swiper no swiping!", Monster.name, 2)
+					Window.displayText("Swiper no swiping!", Monster.name, 2)
+					Window.displayText("Oh, man!", self.name, 2)
+					Window.displayText(self.name + " failed to steal any gold.", "", 1)
+				return
+		else:
+			Window.displayText(self.name + " wants to talk to the "+ Monster.name, "", 1)
+			Window.displayText(self.name + " waltzs up to the " + Monster.name, "", 2)
+			if self.Event.wait(LONGWAIT) is False:
+				Window.displayText(self.name + " tries to do something, fails, and hurts themself.", "", 2)
+				self.health -= 2
+				return
+			self.Event.clear()
+			roll = random.randint(0, 20) + self.persuasion  # simple d20 - persuasion check
+			Window.displayText(self.name + " rolled a " + str(roll) + " on their persuasion check.", "", 1)
+			prompt = "How does " + Monster.name+ " respond?"
+			dic = {"0":"How dare ye! Face my flames instead!", 
+			       "1":"Hm...I'll listen to what ye have to say."}
+			Window.print_options(dic, prompt)
+			if Window.Event.wait(LONGWAIT) is True: 
+				Window.Event.clear()
+				if Window.command is "0":
+					Window.displayText("How dare ye think ye can speak with me!", Monster.name, 2)
+					Window.displayText("Face my spit instead, cretein!", Monster.name, 2)
+					Window.displayText(Monster.name+" spits fire all over the "+self.name +"!", "", 2)
+					self.health -= 3
+					return
+				elif Window.command is "1":
+					Window.displayText("...Ye has 3 mins to say what ye needs to say.", Monster.name, 2)
+					if self.Alignment is "chaotic":
+						Window.displayText("I'm just here for the money.", self.name, 2)
+						Window.displayText("Pay me, and I'll leave you alone.", self.name, 2)
+						dic0 = "Here's 100gp to attack the guy next to you."
+
+						victim = None
+						People = game_state.Characters()
+						for (name, person) in People.items():
+							if person.fighter:
+								if name != self.name:
+									if person.dead is False:
+										victim = name
+										break
+						if victim is not None:
+							extended0 = [(Monster.name, "Here's 100 gold to attack " + victim),
+							             (self.name, "Ok."), ("", self.name +" throws a knife into " + victim),
+							             (victim, "WTH?!?! OW")]
+						else:
+							extended0 = [(self.name, "...I'm the only one here...right?"), (Monster.name, "Hehehehe...")]
+					else:
+						Window.displayText("Why, good sir, are you attacking villagers?", self.name, 2)
+						dic0 = "None of ye beezwax, busta"
+						Who = Monster.name
+						extended0 = [(self.name, "But sir! I'm sure we can reach an agreement."), 
+						             (Who, "*Sigh*, If ye must know, it's cause I hate'm."),
+						             (self.name, "...Why?"), (Who, "They called me names. Foul names. Unspeakable names."),
+						             (self.name, "Like 'terriplasty mcdragin on'?"), (Who, "Worse! Like 'Whydoesthisdragonspeak' and 'I'mnotanoldmangoshdarnit'"),
+						             (self.name, "Hm, those are some pretty terrible names."), (self.name, "I guess you are justified in your murderous rampage."),
+						             (self.name, "Well, then, carry on fine "+Who), (self.name, "I'll just be lounging back there.")]
+					prompt = "How does the "+Monster.name+" respond?"
+					dic.clear()
+					dic = {"0":dic0, "1":"ALL THE FLAMES!!"}
+					Window.print_options(dic, prompt)
+					if Window.Event.wait(LONGWAIT) is True: 
+						Window.Event.clear()
+						if Window.command is "0":
+							for (name, dia) in extended0:
+								Window.displayText(dia, name, 2)
+							if self.Alignment is "chaotic":
+								self.Money += 100
+								if victim is not None:
+									People = game_state.Characters()
+									with game_state.Lock():
+										People[victim].health -= 5
+							else:
+									self.lounge = True
+						else:
+							Window.displayText("How dare ye think ye can speak with me!", "Dragon", 2)
+							Window.displayText("Face my spit instead, cretein!", "Dragon", 2)
+							Window.displayText(Who+" spits fire all over the "+self.name+"!", "", 2)
+							self.health -= 3
+						return
+		Window.displayText(self.name + " tries to do something, fails, and hurts themself.", "", 2)
+		self.health -= 2
+		return
 
