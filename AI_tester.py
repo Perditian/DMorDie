@@ -27,22 +27,31 @@ from math import ceil
 
 class NPC (AI):
 	
-	def __init__(self, name = 'The Old Man'):
-		AI.__init__(self)
+	def __init__(self, name = 'The Old Man', money = 100, Loc = None):
+		AI.__init__(self, Location = Loc)
 		self.name = name
-		self.Money = 100
-		self.Hidden_Money = 0
+		self.Money = money
+
+class Location():
+
+	def __init__(self, name = "the Don't Go Inn")
+		self.name = name
 
 
 def main():    
-	Tavern = AI()
-	Tavern.name = 'The Don\'t go Inn'
-	Tavern.Money = 0
-	Tavern.Hidden_Money = 150
+	Tavern = Location('The Don\'t go Inn')
+	Tavern.Money = 150
+	barkeep = NPC("Anita Colbier")
+	Tavern.Bartender = barkeep
+	barkeep.Location = Tavern
 
-	rogue = Rogue('chaotic')
-	rogue1 = Rogue('good', 'Assasin')
-	OldMan = NPC()
+	Village = Location("Rock Bottom")
+
+	rogue = Rogue(0, Location = Village)
+	rogue1 = Rogue(1, 'Assasin', Village)
+	warrior = Warrior(1, Location = Village)
+
+	OldMan = NPC(Location = Village)
 
 	# create the main window:
 	window = Tk()
