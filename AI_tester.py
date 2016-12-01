@@ -13,8 +13,16 @@ import threading
 import random
 from DungeonMaster import DungeonMaster
 from GameState import GameState
+from Battle import *
 import sys
-from Tkinter import *
+
+try:
+    # for Python2
+    from Tkinter import *
+except ImportError:
+    # for Python3
+    from tkinter import *
+
 from math import ceil
 
 class NPC (AI):
@@ -47,6 +55,7 @@ def main():
 	prompt0 = "There are characters for you to interrupt (i). You can"
 	prompt1 = "also print (p) a list of characters and actions "
 	prompt2 = "if you forget. Spelling counts!"
+	prompt3 = "Press any button to start the game."
 
 	DM.displayText(prompt, "", 1)
 	DM.displayText(prompt0, "", 1)
@@ -57,6 +66,9 @@ def main():
 		         {Tavern.name:Tavern}, DM)
 
 	DM.set_GameState(game_state)
+
+	dagon = Dragon("Menacing Dragon")
+
 
 	# create the Dungeon Master thread:
 	#DM_thread = threading.Thread(target=DM.life, args=(game_state,))
@@ -79,13 +91,19 @@ def main():
 	Rouge_delay1.start()
 	# Rogue_thread1.start()
 
+	battle = Battle()
+	Battle_thread = threading.Thread(target=battle.life, args=(dagon,
+		            [Rogue_thread, Rogue_thread1], game_state))
+	Battle_thread.start()
+
 	Window_thread = threading.Thread(target=window.mainloop())
 	Window_thread.start()
 
-
+	Battle_thread.join()
 	Window_thread.join()
-	Rogue_thread.join()
-	Rogue_thread1.join()
+	#Rogue_thread.join()
+	#Rogue_thread1.join()
+
 	
 	#DM_thread.join()
 
