@@ -19,6 +19,7 @@ TODO: add concurrency, DM's interrupt feature, etc.
 import random
 import Action
 import threading
+import time
 
 class AI:
 
@@ -27,7 +28,8 @@ class AI:
 	# Goals is a list of strings, weights is a list of doubles,
 	# and Actions is a dictionary of Actions (class), indexed by 0...n
 	def __init__(self, Goals = {}, Weights = [], Actions = {}, Trust = 1, 
-		         Default_Action = None, Name = "This is my unique Identifier/Name"):
+		         Default_Action = None, Name = "This is my unique Identifier/Name", health = 15,
+		         fighter = False):
 		goals = {}
 		i = 0
 		for g in Goals:
@@ -40,6 +42,11 @@ class AI:
 		self.default = Default_Action
 		self.Event = threading.Event()
 		self.InternalEvent = threading.Event()
+		self.ready2battle = threading.Event()
+		self.kill = threading.Event()
+		self.health = health
+		self.dead = False
+		self.fighter = fighter
 
 	# right now: determined completely randomly
 	# returns the set of actions for the decided goal
@@ -69,11 +76,11 @@ class AI:
 		return best_action
 	
 	# used by other characters to lock this thread:
-	def lock_me():
+	def lock_me(self):
 		self.Lock.acquire()
 		
 	# used by other characters to unlock this thread:
-	def unlock_me():
+	def unlock_me(self):
 		self.Lock.release()
 	
 	# NOTE: this assumes a message-handling class that is passed with the game_state
@@ -90,18 +97,25 @@ class AI:
 	def life(self, game_state):
 		# First Handle Messages, Resolve messages before proceeding
 		#handle_messages(self, game_state)
-		goalist = []
-		action = None
-		# if there are no profitable actions to do, I kill myself:
-		while action is None:
-			if len(goalist) == len(self.Goals.keys()):
+		Life = True
+		while Life:
+			if self.kill.is_set():
 				Window = game_state.Window()
-				Window.displayText("I went to the dungeon and got eaten by a troll.",
-					               "<", 2)
+				Window.displayText(self.name + " goes to the Dungeon.", "", 2)
 				return
-			(goal, index) = self.decide_goal(goalist)
-			action = self.decide_actions(goal, game_state)
-			goalist.append(index)
-		with self.Lock:
-			game_state = action.perform(game_state)
-		self.life(game_state)
+			goalist = []
+			action = None
+			# if there are no profitable actions to do, I kill myself:
+			while action is None:
+				if len(goalist) == len(self.Goals.keys()):
+					Window = game_state.Window()
+					Window.displayText(self.name+" is ready to do battle!!", "<", 2)
+					self.ready2battle.set()
+					goalist = []
+					with self.Lock:
+						continue
+				(goal, index) = self.decide_goal(goalist)
+				action = self.decide_actions(goal, game_state)
+				goalist.append(index)
+			with self.Lock:
+				game_state = action.perform(game_state)

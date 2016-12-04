@@ -1,6 +1,5 @@
 """
-Rogue Class, extends AI
-so far, only a chaotic rogue is defined.
+Warrior Class, extends AI
 
 """
 
@@ -12,25 +11,23 @@ from DungeonMaster import DungeonMaster
 from GameState import GameState
 import sys
 from math import ceil
-from expiringObject import ExpiringMessage
 import time
 
-LONGWAIT = 15
-SHORTWAIT = 10
-REALLYSHORTWAIT = 5
 
 
-class Rogue(AI):
 
-	def __init__(self, Alignment = 0, name = "Rogue"):
+class Warrior(AI):
+
+	def __init__(self, Alignment = 0, name = "Barbarian", Location = None):
 		if Alignment is 0:
 			self.Alignment = 'chaotic'
-			self.sleight = 5
-			self.persuasion = 3
+			self.anger = 5
+			self.drunkeness = 3
 		else:
 			self.Alignment = 'good'
-			self.sleight = 3
-			self.persuasion = 5
+			self.anger = 3
+			self.drunkeness = 5
+
 		Pickpocketing = Action(self.pickpocket, self.pickpocket_utility, 0.6)
 		Default = Action(self.default_action, self.default_utility, 1)
 		Stealing = Action(self.steal, self.stealing_utility, 0.4)
@@ -40,23 +37,22 @@ class Rogue(AI):
 		Weights = [0.5, 0.5]
 		Actions = {str(0):[Pickpocketing, Stealing], str(1):[Asking]}
 
-		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 10, True)
-		self.Money = 0
-		self.counter = 0
+		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 20, True, Location)
+		self.Money = 100
 		self.Hidden_Money = 0
 		self.lounge = False
 	
 
-	def pickpocket_utility(self, game_state):
+	def killing_utility(self, game_state):
 		People = game_state.Characters()
 		Window = game_state.Window()
-		max_money = 0
-		total_money = 0
+		max_health = 0
+		total_health = 0
 		victim = None
 		for (name, person) in People.items():
 		#	Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
 			if name != self.name:
-				total_money += person.Money
+				total_health += person.health
 				if person.Money >= max_money:
 					max_money = person.Money
 					victim = name
@@ -76,12 +72,6 @@ class Rogue(AI):
 		Money_Earned = People[Victim].Money
 		Window.displayText("The " + self.name + " creeps up to " + Victim, self.name, 2)
 		Window.displayText("The " + self.name + " wants to pickpocket " + Victim, ">", 1)
-        
-        if Victim.fighter == True:  #FIX ME
-            {read, rate, new_game_state} = self.pickpocket_fighter(game_state, Victim)
-            if read == true:
-                return {rate, new_game_state}
-    
 		if self.Event.wait(SHORTWAIT) is False:
 			Window.displayText("The " + self.name + " attempted to pickpocket " + Victim, ">>", 2)
 			Window.displayText("And failed miserably. They lost 10gp.", ">>", 2)
@@ -108,29 +98,6 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 		self.Event.clear()
 		return (Money_Earned, game_state)
-
-    
-    def pickpocket_fighter(self, game_state, Victim):
-        Poeople = game_state.Characters()
-        Window = game_state.Window()
-        Money_Earned = People[Victim].Money
-
-        msg = ExpiringMessage(self.name, Victim, {"You're being pickpocketed", self.name}, time_in_seconds)
-        PostOffice.send_built_message(self.name, Victim, msg)
-
-
-        msg.clear()
-        if msg.read == True:
-            self.InternalEvent.wait()
-            get mail from victim
-            mail_from = PostOffice.get_mail_from(victim, self.name)
-            for msg in mail_from:
-                if msg.content == {"You tried to pickpocket me", rate}
-                return {True, rate, game_state}
-
-            return{True, None, game_state} # just in case 
-        return {False, None, None}
-
 
 	# ideally this is for buildings/places, not people:
 	def steal(self, game_state, Victim):
