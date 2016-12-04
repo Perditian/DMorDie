@@ -12,6 +12,7 @@ from DungeonMaster import DungeonMaster
 from GameState import GameState
 import sys
 from math import ceil
+from expiringObject import ExpiringMessage
 
 LONGWAIT = 15
 SHORTWAIT = 10
@@ -67,6 +68,12 @@ class Rogue(AI):
 		Money_Earned = People[Victim].Money
 		Window.displayText("The " + self.name + " creeps up to " + Victim, self.name, 2)
 		Window.displayText("The " + self.name + " wants to pickpocket " + Victim, ">", 1)
+        
+        if Victim.fighter == True:  #FIX ME
+            {read, rate, new_game_state} = self.pickpocket_fighter(game_state, Victim)
+            if read == true:
+                return {rate, new_game_state}
+    
 		if self.Event.wait(SHORTWAIT) is False:
 			Window.displayText("The " + self.name + " attempted to pickpocket " + Victim, ">>", 2)
 			Window.displayText("And failed miserably. They lost 10gp.", ">>", 2)
@@ -91,6 +98,29 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 		self.Event.clear()
 		return (Money_Earned, game_state)
+
+    
+    def pickpocket_fighter(self, game_state, Victim):
+        Poeople = game_state.Characters()
+        Window = game_state.Window()
+        Money_Earned = People[Victim].Money
+
+        msg = ExpiringMessage(self.name, Victim, {"You're being pickpocketed", self.name}, time_in_seconds)
+        PostOffice.send_built_message(self.name, Victim, msg)
+
+
+        msg.clear()
+        if msg.read == True:
+            self.InternalEvent.wait()
+            get mail from victim
+            mail_from = PostOffice.get_mail_from(victim, self.name)
+            for msg in mail_from:
+                if msg.content == {"You tried to pickpocket me", rate}
+                return {True, rate, game_state}
+
+            return{True, None, game_state} # just in case 
+        return {False, None, None}
+
 
 	# ideally this is for buildings/places, not people:
 	def steal(self, game_state, Victim):
