@@ -23,8 +23,11 @@ class Action:
 		self.total_utility = 0
 		self.action_args = None
 
-	# sigmoid function, used to evaluate succesful performances
-	
+	# sigmoid function, used to evaluate performances
+	def sigmoid(amount):
+		return  -0.002 + (0.3 / (1 + math.exp(-10 * (x - 0.5)))))
+
+
 	# performs and evaluates action, updates probability of success
 	# accordingly
 	def perform(self, game_state):
@@ -36,15 +39,21 @@ class Action:
 			Window.displayText("OBJECTION! *FINGER POINT* THERE'S A CONTRADICTION!", ">", 2)
 			return game_state
 
+		# prevent division by zero:
+		if self.expected_utility == 0:
+				self.expected_utility = 0.0001
+
 		actual_utility *= self.success
 		if actual_utility >= self.expected_utility:
 			# increase success by amount of success:
-			self.success = min(1.0, self.success + success_sigmoid(actual_utility))
+			amount = (actual_utility - self.expected_utility) / self.expected_utility
+			self.success = min(1.0, self.success + success_sigmoid(amount))
 		else:
 			# decrease success by amount of failure:
 			# Note: there is always a miniscule chance of success!
 		#	Window.displayText("I failed by: " + str(amount), ">", 2)
-			self.success = max(0.001, self.success -  failure_sigmoid(expected_utility))
+			amount = (self.expected_utility - actual_utility) / self.expected_utility
+			self.success = max(0.001, self.success -  failure_sigmoid(amount))
 		#Window.displayText("My new success: " + str(self.success), ">", 2)
 		return game_state
 

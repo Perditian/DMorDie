@@ -87,7 +87,7 @@ class NPC (AI):
 
 class Location():
 
-	def __init__(self, name = "the Don't Go Inn", money = 150, health = 10)
+	def __init__(self, name = "the Don't Go Inn", money = 150, health = 10):
 		self.name = name
 		self.Money = money
 		self.health = health
