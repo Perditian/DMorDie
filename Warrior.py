@@ -60,7 +60,7 @@ class Warrior(AI):
 
 
 	# someone is asking me:
-	def askMe(Window, Asker):
+	def askMe(self, Window, Asker):
 		# If I know about the monster, share that information:
 		if self.ready2battle.is_set():
 			Window.displayText("Yo, I heard there's a dragon. Help me slay it!", self.name, 2)

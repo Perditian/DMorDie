@@ -24,8 +24,8 @@ class Action:
 		self.action_args = None
 
 	# sigmoid function, used to evaluate performances
-	def sigmoid(amount):
-		return  -0.002 + (0.3 / (1 + math.exp(-10 * (x - 0.5)))))
+	def sigmoid(self, amount):
+		return  -0.002 + (0.3 / (1 + math.exp(-10 * (amount - 0.5))))
 
 
 	# performs and evaluates action, updates probability of success
@@ -47,13 +47,13 @@ class Action:
 		if actual_utility >= self.expected_utility:
 			# increase success by amount of success:
 			amount = (actual_utility - self.expected_utility) / self.expected_utility
-			self.success = min(1.0, self.success + success_sigmoid(amount))
+			self.success = min(1.0, self.success + self.sigmoid(amount))
 		else:
 			# decrease success by amount of failure:
 			# Note: there is always a miniscule chance of success!
 		#	Window.displayText("I failed by: " + str(amount), ">", 2)
 			amount = (self.expected_utility - actual_utility) / self.expected_utility
-			self.success = max(0.001, self.success -  failure_sigmoid(amount))
+			self.success = max(0.001, self.success -  self.sigmoid(amount))
 		#Window.displayText("My new success: " + str(self.success), ">", 2)
 		return game_state
 

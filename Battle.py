@@ -69,7 +69,7 @@ class Dragon:
 						try:
    				 			People[Player].lounge = False
 						except AttributeError:
-    						pass
+							pass
     					if not People[Player].zombie:
 							People[Player].health = max(0, People[Player].health)
 							if People[Player].health <= 0:

@@ -29,7 +29,7 @@ class AI:
 	# and Actions is a dictionary of Actions (class), indexed by 0...n
 	def __init__(self, Goals = {}, Weights = [], Actions = {}, Trust = 1, 
 		         Name = "This is my unique Identifier/Name", health = 15,
-		         fighter = False, location = None):
+		         fighter = False, Location = None):
 		goals = {}
 		i = 0
 		for g in Goals:
@@ -46,7 +46,7 @@ class AI:
 		self.health = health
 		self.dead = False
 		self.fighter = fighter
-		self.Location = location
+		self.Location = Location
 		self.zombie = False
 
 	# right now: determined completely randomly

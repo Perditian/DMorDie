@@ -26,15 +26,15 @@ from math import ceil
 
 class NPC (AI):
 	
-	def __init__(self, name = 'The Old Man', money = 100, Loc = None):
-		AI.__init__(self, Location = Loc)
+	def __init__(self, name = 'The Old Man', money = 100, Home = None):
+		AI.__init__(self, Location = Home)
 		self.name = name
 		self.Money = money
 		self.flirted = []
 
 	# for Rogues who ask the NPCs:
 	# in future, when we expand the NPC classes, we can vary the dialogue:
-	def askMe(Window, Asker):
+	def askMe(self, Window, Asker):
 			Window.displayText("The "+self.name+" turns to the "+Asker.name, "", 2)
 			prompt = "How should " + self.name + " greet the " + Asker.name +"?"
 			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + Asker.name + "! Get away from me!!"}
@@ -77,12 +77,12 @@ class NPC (AI):
 							Asker.plead(Window, Person)
 				else:
 					# DM chose choice 1: GAH! Get away from me!
-					Window.displayText("GAARGHH?!! You foul " + self.name + ".", Person, 2)
-					Window.displayText("I have no business with you.", Person, 2)
-					Asker.plead(Window, Person)
+					Window.displayText("GAARGHH?!! You foul " + Asker.name + ".", self.name, 2)
+					Window.displayText("I have no business with you.", self.name, 2)
+					Asker.plead(Window, self.name)
 			else:
 				# DM timed out on choosing an option, nothing happens
-				Window.displayText(Person + " ignores the " + self.name, "", 2)
+				Window.displayText(self.name + " ignores the " + Asker.name, "", 2)
 			return
 
 class Location():
@@ -106,12 +106,12 @@ def main():
 	Village = Location("Rock Bottom Village", 0)
 	Village.Village = True
 
-	rogue = Rogue(0, Location = Village)
+	rogue = Rogue(0, Home = Village)
 	rogue1 = Rogue(1, 'Assasin', Village)
 	#warrior = Warrior(1, Location = Village)
 	#warrior1 = Warrior(1, Location = Village, Name = "Paladin")
 
-	OldMan = NPC(Location = Village)
+	OldMan = NPC(Home = Village)
 
 	# create the main window:
 	window = Tk()

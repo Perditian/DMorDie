@@ -29,7 +29,7 @@ class ExpiringMessage(object):
                     return
 
         with self.mutex:
-            if self.read == False
+            if self.read == False:
                 self.valid = False
         
         return
