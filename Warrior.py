@@ -14,8 +14,6 @@ from math import ceil
 import time
 
 
-
-
 class Warrior(AI):
 
 	def __init__(self, Alignment = 0, name = "Barbarian", Location = None):
@@ -28,35 +26,25 @@ class Warrior(AI):
 			self.anger = 3
 			self.drunkeness = 5
 
-		Pickpocketing = Action(self.pickpocket, self.pickpocket_utility, 0.6)
+		KillPeople = Action(self.pickpocket, self.pickpocket_utility, 0.6)
+		KillPlaces = Action(self.pickpocket, self.pickpocket_utility, 0.6)
 		Default = Action(self.default_action, self.default_utility, 1)
-		Stealing = Action(self.steal, self.stealing_utility, 0.4)
-		Asking = Action(self.ask, self.ask_utility, 1)
+		Drinking = Action(self.steal, self.stealing_utility, 0.4)
+		Flirting = Action(self.ask, self.ask_utility, 1)
 		
-		Goals = ['Make Money', 'Ask']
-		Weights = [0.5, 0.5]
+		Goals = ['Kill things', 'Drink', 'Flirt']
+		if Alignment is 0:
+			Weights = [0.5, 0.1, 0.4]
+		else:
+			Weights = [0.1, 0.5, 0.4]
+
 		Actions = {str(0):[Pickpocketing, Stealing], str(1):[Asking]}
 
 		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 20, True, Location)
 		self.Money = 100
-		self.Hidden_Money = 0
-		self.lounge = False
-	
-
-	def killing_utility(self, game_state):
-		People = game_state.Characters()
-		Window = game_state.Window()
-		max_health = 0
-		total_health = 0
-		victim = None
-		for (name, person) in People.items():
-		#	Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
-			if name != self.name:
-				total_health += person.health
-				if person.Money >= max_money:
-					max_money = person.Money
-					victim = name
-		return (max_money, total_money, victim)
+		self.max_health = 20
+		self.zombie = False
+		self.branded = True
 
 	def success_or_fail(self, Window, prompt = None):
 		Window.print_options({'s':'success', 'f':'failure'}, prompt)
@@ -66,85 +54,237 @@ class Warrior(AI):
 				return True
 		return False
 
-	def pickpocket(self, game_state, Victim):
+
+	def killpeople_utility(self, game_state):
 		People = game_state.Characters()
 		Window = game_state.Window()
-		Money_Earned = People[Victim].Money
-		Window.displayText("The " + self.name + " creeps up to " + Victim, self.name, 2)
-		Window.displayText("The " + self.name + " wants to pickpocket " + Victim, ">", 1)
+		max_health = 0
+		total_health = 0
+		victim = None
+		for (name, person) in People.items():
+		#	Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
+			if name != self.name:
+				total_health += person.health
+				if person.health >= max_health:
+					max_health = person.health
+					victim = name
+
+		return (max_health, total_health, victim)
+
+	def killplaces_utility(self, game_state):
+		Locations = game_state.Locations()
+		Window = game_state.Window()
+		max_health = 0
+		total_health = 0
+		victim = None
+		for (name, place) in Locations.items():
+		#	Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
+			if name != self.name:
+				total_health += place.health
+				if person.health >= max_health:
+					max_health = place.health
+					victim = name
+		return (max_health, total_health, victim)
+
+
+	def killpeople(self, game_state, Victim):
+		People = game_state.Characters()
+		Window = game_state.Window()
+		health_taken = 0
+		if self.Alignment is 'chaotic':
+			Window.displayText("Hey! "+ Victim +"! You lookin' at me funny?", self.name, 2)
+			if self.drunkeness >= 10:
+				Window.displayText("Yo, you're drunk, you need to calm down.", Victim, 2)
+				Window.displayText("I'm not drunk *hic*, YOU'RE drunk! Enough talk, fight me!", self.name, 2)
+		else:			
+			Window.displayText(self.name+", you're village called. They want their idiot back", Victim, 2)
+			Window.displayText(Victim+ ", you insulted me! I must duel to regain my honor!", self.name, 2)
+		if self.zombie:
+			Window.displayText("Dude, you stink and your face is fallin off", Victim, 2)
+			Window.displayText("ITS CAUSE IMMA ZOMBAE GHHHRRRR", self.name, 2)
+
+		Window.displayText("The " + self.name + " wants to attack " + Victim, "", 1)
 		if self.Event.wait(SHORTWAIT) is False:
-			Window.displayText("The " + self.name + " attempted to pickpocket " + Victim, ">>", 2)
-			Window.displayText("And failed miserably. They lost 10gp.", ">>", 2)
+			self.Event.clear()
+			if self.drunkeness >= 10:
+				Window.displayText(self.name + " swings their fist at "+Victim+", but hit themself instead!", "", 2)
+			else:
+				Window.displayText("The " + self.name + " swings their axe at " + Victim + ", but ends up hitting themself instead.", ">>", 2)
+			Window.displayText("Ha! Why you be hittin yourself?", Victim, 2)
+			Window.displayText(self.name +" lost 1 health.", "", 1)
 			with game_state.Lock():
-				People[self.name].Money -= 10
-				People[self.name].Money = min(0, People[self.name].Money)
-			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
+				People[self.name].health -= 1
+				if not self.zombie:
+					People[self.name].health = max(0, People[self.name].health)
+					if self.health <= 0:
+						self.dead = True
+						Window.displayText(self.name + " has killed themself.", "", 2)	
+						Window.displayText("The villagers dig a hole in the ground, and bury the "+self.name+"'s corpse.", "", 2)
+						Window.displayText("Three days go by...", "", 2)
+						Window.displayText("In the dead of night, the ground grinds its teeth. The sky shrieks.", "", 2)
+						Window.displayText("A hand bursts from the grave, and crawls itself out. A foot, torso, and body follow.", "", 2)
+						Window.displayText("The parts assemble themselves into the " + self.name+"!", "", 2)
+						Window.displayText("The "+self.name+" is now a zombie.", "", 2)
+						self.zombie     = True
+						self.drunkeness = 100
+						self.anger      = 100
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
+			health_taken = -1
 		else:
-			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
+			roll = random.randint(0, 20) + self.anger # simple d20 - hit roll
 			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
+				roll = random.randint(0, 12) + self.anger # simple d12 - hit roll
 				with game_state.Lock():
-					Money_Earned = People[Victim].Money
-					People[self.name].Money += Money_Earned
-					People[Victim].Money = 0
-				Window.displayText("The " + self.name + " pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+					People[Victim].health -= roll
+					People[Victim].health = max(1, People[self.name].health)
+				if self.zombie:
+					Window.displayText("The undead " + self.name + "lunges out and bites "+ Victim+", dealing "+str(roll)+" damage!!", "", 2)
+				elif self.drunkeness >= 10:
+					Window.displayText(self.name+" spazes towards "+Victim+", seems to lunge sideways, but kicks upwards, sending "+Victim+" flying!!", "", 2)
+				else:
+					Window.displayText("The " + self.name + " swings their axe at " + Victim + " and deals " + str(roll) + " damage!!", "", 2)
+				health_taken = roll
 			else:
-				Window.displayText("The " + self.name + " failed!!", "", 2)
-			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
+				Window.displayText("The " + self.name + " swings their axe and misses!!", "", 2)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		self.Event.clear()
-		return (Money_Earned, game_state)
+		self.drunkeness -= 1
+		self.drunkeness = max(0, self.drunkeness)
+		return (health_taken, game_state)
 
 	# ideally this is for buildings/places, not people:
-	def steal(self, game_state, Victim):
+	def killplaces(self, game_state, Victim):
 		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
-		Window.displayText("The " + self.name +" sneaks up to " + Victim, "<", 2)
-		Window.displayText("The "+self.name +" wants to steal from " + Victim, "<", 1)
+		destroyed = 0
+		Window.displayText("The " + self.name +" sees an Ogre in the" + Victim, "", 2)
+		Window.displayText("The "+self.name +" wants to attack the Ogre!", "", 1)
 		if self.Event.wait(SHORTWAIT) is False:
-			Money_Earned = 0
-			Window.displayText("Oh no! The " + self.name + " got caught stealing :(", "", 2)
-			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
+			self.Event.clear()
+			Window.displayText(self.name + " slahes and thrashes against the infernal Ogre", "", 2)
+			Window.displayText("But the Ogre is really a Windmill!", "", 2)
+			Window.displayText(Victim +" now has one less Windmill", "", 2)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
-			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
+			self.Event.clear()
+			roll = random.randint(0, 20) + self.anger # simple d20 - sleight of hand
 			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
-				with game_state.Lock():
-					Money_Earned = Places[Victim].Hidden_Money
-					People[self.name].Money += Money_Earned
-					Places[Victim].Hidden_Money = 0
-				Window.displayText("The "+self.name+" stole from " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
+				roll = random.randint(0, 12) + self.anger # simple d12 - sleight of hand
+				if self.drunkeness >= 10:
+					Window.displayText(self.name + " sees a Windmill in the distance, and becomes enraged", "", 2)
+					Window.displayText("WINDMILL YOU SHALL CURSE MY FAMILY'S NAME NO LONGER!", self.name, 2)
+					Window.displayText(self.name + " ignores the Ogre, and destroys the Windmill instead.", "", 2)
+				else:
+					with game_state.Lock():
+						Window.displayText("Argh! Why do you hurt me so?", "Ogre", 2)
+						Window.displayText("Devilish creature! your existence is a bane in this universe.", self.name, 2)
+						Window.displayText("Begone!", self.name, 2)
+						Window.displayText(self.name+" slashes and pierces the Ogre. The Ogre slams and rushes "+self.name+" but slips, and is impaled. The Ogre is no more.", "", 2)
+
+						Places[Victim].health -= roll
+						if Places[Victim].health <= (Places[Victim].max_health * 0.5):
+							Window.displayText(Victim +" has a reputation for being unkind to Ogre-kind. No Ogre comes there anymore.", "", 2)
+							Window.displayText(Victim+"'s GDP takes a hit from the loss of the Ogres. People are starving in the streets.", "", 2)
+							Window.displayText("The villagers glare at the "+self.name+", refusing to sell them anything anymore in retaliation.", "", 2)
+							Victim.branded.append(self.name)
 			else:
-				Money_Earned = 0
-				Window.displayText("The "+self.name+" failed!!", "", 2)
-			Window.displayText("The "+self.name+" now has " + str(People[self.name].Money) + " zenny", "<", 1)
+				Window.displayText(self.name + " slahes and thrashes against the infernal Ogre", "", 2)
+				Window.displayText("But the Ogre is really a Windmill!", "", 1)
+				Window.displayText(Victim +" now has one less Windmill", "", 1)
+			self.Event.clear()
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
-		self.Event.clear()
+			self.drunkeness -= 1
+			self.drunkeness = max(0, self.drunkeness)
 		return (Money_Earned, game_state)
 
-	def stealing_utility(self, game_state):
+	def drinking_utility(self, game_state):
+		Locations = GameState.Locations()
+		bar = None
+		for (name, place) in Locations:
+			try:
+   				 if self.name is not in place.branded:
+					bar = name
+			except AttributeError:
+    			pass
+		return (self.max_health - self.health, bar)
+
+
+	def drinking(self, game_state, Tavern):
 		Places = game_state.Locations()
+		People = game_state.Characters()
 		Window = game_state.Window()
-		max_money = 0
-		total_money = 0
-		victim = None
-		for (name, place) in Places.items():
-#			Window.displayText(name + " has " + str(place.Hidden_Money) + " hidden zenny", "", 1)
-			if name != self.name:
-				total_money += place.Hidden_Money
-				if place.Hidden_Money >= max_money:
-					max_money = place.Hidden_Money
-					victim = name
-		return (max_money, total_money, victim)
+
+		Window.displayText(self.name + " is in the Tavern", "", 2)
+		Window.displayText(Tavern.barkeep.name+", gimme another!", self.name, 2)
+		with game_state.Lock():
+			if self.Money > 0:
+				Window.displayText(self.name+" shines a gold piece, and slams it on the table.", "", 2)
+				self.Money -= 1
+				self.health += math.ceil((self.max_health - self.health) * 0.1) # gain 10% of what you need
+				self.health = min(self.max_health, self.health)
+			else:
+				Window.displayText("I need a coin, for a drink.", Tavern.barkeep.name, 2)
+				Window.displayText("Put'er on my tab.", self.name, 2)
+				Tavern.tab[self.name] = Tavern.tab.get(self.name, 0) + 1
+				self.health += math.ceil((self.max_health - self.health) * 0.1) # gain 10% of what you need
+				self.health = min(self.max_health, self.health)
+				if Tavern.tab[self.name] >= 5:
+					Window.displayText("Dude, if ya keep drinkin without payin, I'mma hafta kick you out permanently.", Tavern.barkeep.name)
+				if Tavern.tab[self.name] >= 10:
+					Window.displayText("Thats enough! Pay me at once or geddout.", Tavern.barkeep.name, 2)
+					Window.displayText(self.name + " has no money, and was thrown out.", "", 2)
+					Tavern.branded.append(self.name)
+					return
+		Window.displayText("Oie! Half-Orc! Betcha can't drink as much as I!", self.name, 2)
+		Window.displayText("Gahahaha! Mangy mortal, your puny stomach can't even contain one of my tankards.", "Imanorc", 2)
+		Window.displayText("You're on! *glug* *glug* *chug* *glug* *glug*", self.name, 2)
+		Window.displayText("Issat all you got? *gloug* *gloug* *choug* *gloug* *gloug*", "Imanorc", 2)
+		Window.displayText("After almost clearing the "+Tavern.name+", ", "", 2)
+		Window.displayText("*Hic* Howwabout we armwrestle an whoever wins picksupthe tab?", self.name, 2)
+		Window.displayText("Arright, pun-*hic*-y warrior.", "Imanorc", 2)
+		Window.displayText(self.name + " wants to armwrestle Imanorc", "", 1)
+		if self.Event.wait(SHORTWAIT) is False:
+			self.Event.clear()
+			Window.displayText("Grrrrghhh!!!! Why you so strronng???", self.name, 2)
+			Window.displayText("Gahahaha! Weakling.", "Imanorc", 2)
+			Window.displayText("Imanorc crushes "+self.name+"'s hand for fun.", "", 2)
+			with game_state.Lock():
+				self.health -= 5
+				self.health = max(0, self.health)
+				self.money -= 5
+				self.money = max(0, self.money)
+		else:
+			self.Event.clear()
+			roll = random.randint(0, 20) + self.drunkeness # simple d20 - athletics
+			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
+			cmd = self.success_or_fail(Window, prompt)
+			if cmd:
+					Window.displayText("*BANG* Ha! I Win!!", self.name, 2)
+					Window.displayText("Nooo!! How could this be!", "Imanorc", 2)
+					with game_state.Lock():
+						self.money  += 5
+						self.health += math.ceil((self.max_health - self.health) * 0.1)
+						self.health = min(self.max_health, self.health)
+						self.drunkeness += 5
+			else:
+				Window.displayText("Grrrrghhh!!!! Why you so strronng???", self.name, 2)
+				Window.displayText("Gahahaha! You're so weak.", "Imanorc", 2)
+				Window.displayText(self.name+"'s arm is strained.", "", 2)
+				with game_state.Lock():
+					self.health -= 1
+					self.health = max(0, self.health)
+					self.money -= 5
+					self.money = max(0, self.money)
+		return
 
 
 	def default_action(self, game_state, N=None):
@@ -180,11 +320,12 @@ class Warrior(AI):
 		return
 
 
-	def ask(self, game_state, Person):
+	def flirt(self, game_state, Person):
 		People = game_state.Characters()
 		Window = game_state.Window()
-		Window.displayText("The "+ self.name +" walks up to " + Person, "<", 2)
-		Window.displayText("The "+self.name+" wants to talk to " + Person, "<", 1)
+		Window.displayText("The "+ self.name +" saunters up to " + Person, "", 2)
+		Window.displayText()
+		Window.displayText("The "+self.name+" wants to talk to " + Person, "", 1)
 		if self.Event.wait(SHORTWAIT) is False:
 			Window.displayText(Person + " ignores the " + self.name, "", 2)
 			return (0, game_state)
@@ -244,13 +385,16 @@ class Warrior(AI):
 		return (0, game_state)
 
 
-	def ask_utility(self, game_state):
+	def flirt_utility(self, game_state):
 		People = game_state.Characters()
 		people_list = People.keys()
 		people_list.remove(self.name)
 		victim = people_list[random.randint(0, len(people_list) - 1)]
-		#return (random.random() * 100, random.random() * 100, victim)
-		return (random.randint(0, 1), 1, victim)
+		try:
+   			if People[victim].barkeep:
+   				return(1000, 1000, victim)
+		except AttributeError:
+			return (random.randint(0, 10), 10, victim)
 
 
 	def attack(self, finished, Monster, game_state):

@@ -24,6 +24,7 @@ class Dragon:
 		self.fly_away = 0
 		self.__lock = threading.Lock()
 
+
 	def Lock(self):
 		return self.__lock
 
@@ -58,7 +59,7 @@ class Dragon:
 					else:
 						People[Player].health -=dam
 						People[Player].lounge = False
-						if People[Player].health < 0:
+						if (not People[Player].zombie) and People[Player].health < 0:
 							Window.displayText("Oh no! "+Player+" is in critical condition!!", "", 2)
 							People[Player].dead = True
 			elif Window.command == "1":
@@ -154,8 +155,11 @@ class Battle(object):
 				order = self.prepare4battle(Monster, GameState)
 				self.doBattle(order, Monster, GameState)
 				Monster.finishedBattle(GameState)
+				# restart threads
 				#for person in People.values():
-				#	person.unlock_me()
+				#	thread = person.life(...)
+				# 	thread.start()
+
 		return
 
 
@@ -206,7 +210,7 @@ class Battle(object):
 		threads = []
 		for (n, p) in People.items():
 			if p.fighter:
-				if p.health <= 0:
+				if p.health == 0:
 					Window.displayText(n+" is dead...", "", 2)
 				else:
 					threads.append(threading.Thread(target=p.attack, args=(self.finished, Monster, GameState,)))
@@ -221,7 +225,9 @@ class Battle(object):
 		healthsum = 0
 		for person in People.values():
 			if person.fighter:
-				healthsum += max(person.health, 0)
+				health = person.health
+				if health > 0:
+					healthsum += health
 		if healthsum <= 0:
 			self.finished.set()
 		if Monster.health <= 0:
@@ -242,8 +248,3 @@ class Battle(object):
 				if self.finished.is_set() is False:
 					Monster.attack(self.finished, GameState)
 		return
-
-
-
-
-

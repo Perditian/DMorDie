@@ -1,14 +1,13 @@
 """
- Avita Sharma
- 
- TESTS FOR AI AND ACTIONS
-
- In Future: game_state should have the state, messaging, and lock
+ Avita Sharma, Eric Wyss, David Taus
+ DM or DIE!!
+ Main game loop
 """
 
 from AI import AI 
 from Action import Action
 from Rogue import Rogue
+# from Warrior import Warrior
 import threading
 import random
 from DungeonMaster import DungeonMaster
@@ -31,25 +30,33 @@ class NPC (AI):
 		AI.__init__(self, Location = Loc)
 		self.name = name
 		self.Money = money
+		self.flirted = []
 
 class Location():
 
-	def __init__(self, name = "the Don't Go Inn")
+	def __init__(self, name = "the Don't Go Inn", money = 150, health = 10)
 		self.name = name
+		self.money = money
+		self.health = health
+		self.max_health = health
+		self.branded = [] # list of people ostracized from the location
 
 
 def main():    
-	Tavern = Location('The Don\'t go Inn')
-	Tavern.Money = 150
-	barkeep = NPC("Anita Colbier")
+	Tavern = Location('The Don\'t go Inn', health = 30)
+	barkeep = NPC("Anita Colbier", 0)
+	barkeep.barkeep = True
 	Tavern.Bartender = barkeep
 	barkeep.Location = Tavern
+	Tavern.Tavern = True
 
-	Village = Location("Rock Bottom")
+	Village = Location("Rock Bottom Village", 0)
+	Village.Village = True
 
 	rogue = Rogue(0, Location = Village)
 	rogue1 = Rogue(1, 'Assasin', Village)
-	warrior = Warrior(1, Location = Village)
+	#warrior = Warrior(1, Location = Village)
+	#warrior1 = Warrior(1, Location = Village, Name = "Paladin")
 
 	OldMan = NPC(Location = Village)
 
@@ -71,8 +78,9 @@ def main():
 	DM.displayText(prompt1, "", 1)
 	DM.displayText(prompt2, "", 1)
 
-	game_state = GameState({}, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan},
-		         {Tavern.name:Tavern}, DM)
+	game_state = GameState({}, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan,
+					barkeep.name:barkeep},
+		         {Tavern.name:Tavern, Village.name:Village}, DM)
 
 	DM.set_GameState(game_state)
 

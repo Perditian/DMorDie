@@ -9,19 +9,14 @@ from Action import Action
 import threading
 import random
 from DungeonMaster import DungeonMaster
-from GameState import GameState
+from GameState import *
 import sys
 from math import ceil
 import time
 
-LONGWAIT = 15
-SHORTWAIT = 10
-REALLYSHORTWAIT = 5
-
-
 class Rogue(AI):
 
-	def __init__(self, Alignment = 0, name = "Rogue"):
+	def __init__(self, Alignment = 0, name = "Rogue", Location = None):
 		if Alignment is 0:
 			self.Alignment = 'chaotic'
 			self.sleight = 5
@@ -39,10 +34,9 @@ class Rogue(AI):
 		Weights = [0.5, 0.5]
 		Actions = {str(0):[Pickpocketing, Stealing], str(1):[Asking]}
 
-		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 10, True)
+		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 10, True, Location)
 		self.Money = 0
 		self.counter = 0
-		self.Hidden_Money = 0
 		self.lounge = False
 	
 
@@ -53,7 +47,6 @@ class Rogue(AI):
 		total_money = 0
 		victim = None
 		for (name, person) in People.items():
-		#	Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
 			if name != self.name:
 				total_money += person.Money
 				if person.Money >= max_money:

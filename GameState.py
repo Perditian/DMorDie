@@ -6,6 +6,17 @@ TODO: add Messaging
 """ 
 
 import threading
+
+"""
+To change difficulty, change the wait times
+(also number of characters spawned)
+
+"""
+LONGWAIT = 15
+SHORTWAIT = 10
+REALLYSHORTWAIT = 5
+
+
 class GameState(object):
 
 	def __init__(self, Messaging, Characters, Locations, Window):

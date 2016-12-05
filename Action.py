@@ -7,6 +7,7 @@
 
  TODO: MAKE UTILITY FUNCTION ~NEGATIVE SIGMOID
 """ 
+import math
 
 class Action:
 
@@ -22,29 +23,28 @@ class Action:
 		self.total_utility = 0
 		self.action_args = None
 
+	# sigmoid function, used to evaluate succesful performances
+	
 	# performs and evaluates action, updates probability of success
 	# accordingly
 	def perform(self, game_state):
 		Window = game_state.Window()
 		(actual_utility, game_state) = self.action(game_state, self.action_args)
 		#Window.displayText("My success: " + str(self.success), ">", 2)
-		amount = 0
-		if self.total_utility != 0:
-			amount = actual_utility / self.total_utility
-
 		if actual_utility is None:
 			# we reached a contradiction; do nothing:
 			Window.displayText("OBJECTION! *FINGER POINT* THERE'S A CONTRADICTION!", ">", 2)
 			return game_state
-		elif actual_utility >= self.expected_utility:
+
+		actual_utility *= self.success
+		if actual_utility >= self.expected_utility:
 			# increase success by amount of success:
-		#	Window.displayText("I succeeded by: " + str(amount), ">", 2)
-			self.success = min(1.0, self.success * (1 + amount))
+			self.success = min(1.0, self.success + success_sigmoid(actual_utility))
 		else:
 			# decrease success by amount of failure:
 			# Note: there is always a miniscule chance of success!
 		#	Window.displayText("I failed by: " + str(amount), ">", 2)
-			self.success = max(0.001, self.success *  amount)
+			self.success = max(0.001, self.success -  failure_sigmoid(expected_utility))
 		#Window.displayText("My new success: " + str(self.success), ">", 2)
 		return game_state
 
