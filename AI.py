@@ -100,6 +100,10 @@ class AI:
 		#handle_messages(self, game_state)
 		Life = True
 		while Life:
+			Window = game_state.Window()
+			#turnstile for starting game
+			Window._DungeonMaster__Lock.acquire()
+			Window._DungeonMaster__Lock.release()
 			# I am in battle, stop doing actions: (kill thread)
 			if self.kill.is_set():
 				Window = game_state.Window()

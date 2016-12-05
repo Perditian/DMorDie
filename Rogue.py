@@ -306,7 +306,8 @@ class Rogue(AI):
 	# ask utility is random, person is random:
 	def ask_utility(self, game_state):
 		People = game_state.Characters()
-		people_list = People.keys()
+#		people_list = People.keys()
+		people_list = list(People)
 		people_list.remove(self.name)
 		victim = people_list[random.randint(0, len(people_list) - 1)]
 		return (random.random() * 100, random.random() * 100, victim)
