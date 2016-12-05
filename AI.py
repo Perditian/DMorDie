@@ -28,7 +28,7 @@ class AI:
 	# Goals is a list of strings, weights is a list of doubles,
 	# and Actions is a dictionary of Actions (class), indexed by 0...n
 	def __init__(self, Goals = {}, Weights = [], Actions = {}, Trust = 1, 
-		         Default_Action = None, Name = "This is my unique Identifier/Name", health = 15,
+		         Name = "This is my unique Identifier/Name", health = 15,
 		         fighter = False, location = None):
 		goals = {}
 		i = 0
@@ -39,7 +39,6 @@ class AI:
 		self.DMtrust = Trust
 		self.name = Name
 		self.Lock = threading.Lock()
-		self.default = Default_Action
 		self.Event = threading.Event()
 		self.InternalEvent = threading.Event()
 		self.ready2battle = threading.Event()
@@ -48,6 +47,7 @@ class AI:
 		self.dead = False
 		self.fighter = fighter
 		self.Location = location
+		self.zombie = False
 
 	# right now: determined completely randomly
 	# returns the set of actions for the decided goal
@@ -100,23 +100,30 @@ class AI:
 		#handle_messages(self, game_state)
 		Life = True
 		while Life:
+			# I am in battle, stop doing actions: (kill thread)
 			if self.kill.is_set():
 				Window = game_state.Window()
 				Window.displayText(self.name + " goes to the Dungeon.", "", 2)
 				return
 			goalist = []
 			action = None
-			# if there are no profitable actions to do, I kill myself:
+			# if there are no profitable actions to do, I prepare for battle:
 			while action is None:
 				if len(goalist) == len(self.Goals.keys()):
 					Window = game_state.Window()
-					Window.displayText(self.name+" is ready to do battle!!", "<", 2)
+					Window.displayText(self.name+" is ready to do battle!!", "", 2)
 					self.ready2battle.set()
-					goalist = []
+					# reset the goalist, so I continue to do actions
+					# until the party is all ready to battle:
+					goalist = [] 
 					with self.Lock:
 						continue
+
+				# decide the goal, then the action:
 				(goal, index) = self.decide_goal(goalist)
 				action = self.decide_actions(goal, game_state)
 				goalist.append(index)
+
+			# used to lock myself, perform an action:
 			with self.Lock:
 				game_state = action.perform(game_state)

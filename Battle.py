@@ -16,6 +16,7 @@ SHORTWAIT = 15
 REALLYSHORTWAIT = 5
 
 
+# The Monster Class, only dragons are implemented currently:
 class Dragon:
 
 	def __init__(self, name, health = 30):
@@ -28,13 +29,18 @@ class Dragon:
 	def Lock(self):
 		return self.__lock
 
+	# attack the characters, if I kill them all or 
+	# fly away, set finished to true:
 	def attack(self, finished, GameState):
 		Window = GameState.Window()
 		prompt = "What should the dragon do?"
 		dic = {"0":"attack!", "1":"Fly away"}
 		Window.print_options(dic, prompt)
+		# wait for DM to choose an option:
 		if Window.Event.wait(LONGWAIT) is True:
 			Window.Event.clear()
+			# Dragon decides to attack
+			#### NOTE: should include a test to see if their attack hits. ####
 			if Window.command == "0":
 				self.fly_away = 0
 				People = GameState.Characters()
@@ -47,6 +53,7 @@ class Dragon:
 						i += 1
 				dic[str(i)] = "themself"
 				Window.print_options(dic, prompt)
+				# wait for DM to choose a person to attack:
 				if Window.Event.wait(LONGWAIT) is True:
 					Window.Event.clear()
 					Player = dic[Window.command]
@@ -57,11 +64,18 @@ class Dragon:
 						if self.health <= 0:
 							finished.set()
 					else:
+						# attack the player
 						People[Player].health -=dam
-						People[Player].lounge = False
-						if (not People[Player].zombie) and People[Player].health < 0:
-							Window.displayText("Oh no! "+Player+" is in critical condition!!", "", 2)
-							People[Player].dead = True
+						try:
+   				 			People[Player].lounge = False
+						except AttributeError:
+    						pass
+    					if not People[Player].zombie:
+							People[Player].health = max(0, People[Player].health)
+							if People[Player].health <= 0:
+								Window.displayText("Oh no! "+Player+" is in critical condition!!", "", 2)
+								People[Player].dead = True
+			# Dragon decides to fly away, takes 2 consecutive actions:
 			elif Window.command == "1":
 				if self.fly_away == 0:
 					Window.displayText("The Dragon is preparing to fly away!", "", 2)
@@ -72,6 +86,7 @@ class Dragon:
 					finished.set()
 				self.fly_away += 1
 			return
+		# DM did not interact on time, do something horrible:
 		dam = random.randint(0, 20) + 10 #normal d20
 		self.health -= dam
 		Window.displayText("The dragon attacked itself!", "", 2) 
@@ -80,6 +95,7 @@ class Dragon:
 			finished.set()
 		return
 
+	# The battle is finished, decide outcome:
 	def finishedBattle(self,GameState):
 		Window = GameState.Window()
 		if self.health < 0:
@@ -130,11 +146,14 @@ class Dragon:
 		return
 
 
+# Battle class!
 class Battle(object):
 
 	def __init__(self):
 		self.finished = threading.Event()	
 
+	# check if all fighters are ready to battle, if they are, send them
+	# to battle:
 	def life(self, Monster, threads, GameState):
 		People = GameState.Characters()
 		all_ready = False
@@ -148,21 +167,22 @@ class Battle(object):
 			for fighter in Fighters:
 					all_ready = all_ready and fighter.ready2battle.is_set()
 			if all_ready:
+				# kill all fighter threads:
 				for fighter in Fighters:
 					fighter.kill.set()
 				for thread in threads:
 					thread.join()
+				# do battle!:
 				order = self.prepare4battle(Monster, GameState)
 				self.doBattle(order, Monster, GameState)
 				Monster.finishedBattle(GameState)
-				# restart threads
+				# # restart threads:
 				#for person in People.values():
 				#	thread = person.life(...)
 				# 	thread.start()
-
 		return
 
-
+	# prepare for the battle:
 	def prepare4battle(self, Monster, GameState):
 		Window = GameState.Window()
 		Window.displayText("", "", 2)
@@ -203,14 +223,15 @@ class Battle(object):
 		order = random.random()
 		return order
 
-
+	# let all the characters attack concurrently:
 	def Characters_attack(self, Monster, GameState):
 		Window = GameState.Window()
 		People = GameState.Characters()
 		threads = []
+		# make a thread for each fighter attack function:
 		for (n, p) in People.items():
 			if p.fighter:
-				if p.health == 0:
+				if not p.zombie and p.health <= 0:
 					Window.displayText(n+" is dead...", "", 2)
 				else:
 					threads.append(threading.Thread(target=p.attack, args=(self.finished, Monster, GameState,)))
@@ -220,6 +241,8 @@ class Battle(object):
 			t.join()
 		return
 
+	# check if we meet a win condition:
+	# (all living fighters are dead, or the monster is dead):
 	def win_yet(self, Monster, GameState):
 		People = GameState.Characters()
 		healthsum = 0
@@ -234,7 +257,7 @@ class Battle(object):
 			self.finished.set()
 		return
 
-
+	# fight! If order > 0.5, Monster goes first:
 	def doBattle(self,order, Monster, GameState):
 		while self.finished.is_set() is False:
 			if order > 0.5:

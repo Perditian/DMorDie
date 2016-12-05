@@ -16,20 +16,25 @@ import time
 
 class Warrior(AI):
 
-	def __init__(self, Alignment = 0, name = "Barbarian", Location = None):
+	def __init__(self, Alignment = 0, name = "Barbarian", Home = None):
+		# anger = fighting ability
+		# drunkeness = how drunk am I
 		if Alignment is 0:
 			self.Alignment = 'chaotic'
 			self.anger = 5
 			self.drunkeness = 3
+			drinking_success = 0.4
+			kill_success = 0.6 
 		else:
 			self.Alignment = 'good'
 			self.anger = 3
 			self.drunkeness = 5
+			drinking_success = 0.6
+			kill_success = 0.4
 
-		KillPeople = Action(self.pickpocket, self.pickpocket_utility, 0.6)
-		KillPlaces = Action(self.pickpocket, self.pickpocket_utility, 0.6)
-		Default = Action(self.default_action, self.default_utility, 1)
-		Drinking = Action(self.steal, self.stealing_utility, 0.4)
+		KillPeople = Action(self.pickpocket, self.pickpocket_utility, kill_success)
+		KillPlaces = Action(self.pickpocket, self.pickpocket_utility, kill_success)
+		Drinking = Action(self.steal, self.stealing_utility, drinking_success)
 		Flirting = Action(self.ask, self.ask_utility, 1)
 		
 		Goals = ['Kill things', 'Drink', 'Flirt']
@@ -40,10 +45,9 @@ class Warrior(AI):
 
 		Actions = {str(0):[Pickpocketing, Stealing], str(1):[Asking]}
 
-		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 20, True, Location)
+		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 20, True, Home)
 		self.Money = 100
 		self.max_health = 20
-		self.zombie = False
 		self.branded = True
 
 	def success_or_fail(self, Window, prompt = None):
@@ -53,6 +57,19 @@ class Warrior(AI):
 			if Window.command == 's':
 				return True
 		return False
+
+
+	# someone is asking me:
+	def askMe(Window, Asker):
+		# If I know about the monster, share that information:
+		if self.ready2battle.is_set():
+			Window.displayText("Yo, I heard there's a dragon. Help me slay it!", self.name, 2)
+			Window.displayText("Ok.", Asker.name, 2)
+			Asker.ready2battle.set()
+		# otherwise, tell them to go away:
+		else:
+			Window.displayText("Man, don't disturb me.", self.name, 2)
+		return
 
 
 	def killpeople_utility(self, game_state):

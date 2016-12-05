@@ -1,7 +1,11 @@
 """
 Rogue Class, extends AI
-so far, only a chaotic rogue is defined.
 
+Rogues can:
+	(*) Pickpocket other characters
+	(*) Steal from buildings
+	(*) Ask characters for money
+	(*) Attack monsters in battle
 """
 
 from AI import AI 
@@ -17,30 +21,47 @@ import time
 
 class Rogue(AI):
 
-	def __init__(self, Alignment = 0, name = "Rogue", Location = None):
+	def __init__(self, Alignment = 0, name = "Rogue", Home = None):
 		if Alignment is 0:
 			self.Alignment = 'chaotic'
 			self.sleight = 5
 			self.persuasion = 3
+			pickpocket_success = 0.6
+			stealing_success = 0.4
 		else:
 			self.Alignment = 'good'
 			self.sleight = 3
 			self.persuasion = 5
-		Pickpocketing = Action(self.pickpocket, self.pickpocket_utility, 0.6)
-		Default = Action(self.default_action, self.default_utility, 1)
-		Stealing = Action(self.steal, self.stealing_utility, 0.4)
+			pickpocket_success = 0.4
+			stealing_success = 0.6
+
+		Pickpocketing = Action(self.pickpocket, self.pickpocket_utility, pickpocket_success)
+		Stealing = Action(self.steal, self.stealing_utility, stealing_success)
 		Asking = Action(self.ask, self.ask_utility, 1)
 		
 		Goals = ['Make Money', 'Ask']
 		Weights = [0.5, 0.5]
 		Actions = {str(0):[Pickpocketing, Stealing], str(1):[Asking]}
 
-		AI.__init__(self, Goals, Weights, Actions, 0.5, Default, name, 10, True, Location)
+		# make an AI with 0.5 trust in the DM, 10 health, a fighter, and
+		# home
+		AI.__init__(self, Goals, Weights, Actions, 0.5, name, 10, True, Home)
 		self.Money = 0
 		self.counter = 0
 		self.lounge = False
-	
 
+	# asks the DM if an event succeeds or fails:
+	def success_or_fail(self, Window, prompt = None):
+		Window.print_options({'s':'success', 'f':'failure'}, prompt)
+		if Window.Event.wait(LONGWAIT) is True:
+			Window.Event.clear()
+			if Window.command == 's':
+				return True
+		return False
+
+	# determines the maximum utility gained from pickpocketing one person,
+	# returns the max utility, the total utility, and the best victim
+	# for pickpocketing:
 	def pickpocket_utility(self, game_state):
 		People = game_state.Characters()
 		Window = game_state.Window()
@@ -55,14 +76,8 @@ class Rogue(AI):
 					victim = name
 		return (max_money, total_money, victim)
 
-	def success_or_fail(self, Window, prompt = None):
-		Window.print_options({'s':'success', 'f':'failure'}, prompt)
-		if Window.Event.wait(LONGWAIT) is True:
-			Window.Event.clear()
-			if Window.command == 's':
-				return True
-		return False
 
+	# this Rogue pickpockets the Victim:
 	def pickpocket(self, game_state, Victim):
 		People = game_state.Characters()
 		Window = game_state.Window()
@@ -70,31 +85,37 @@ class Rogue(AI):
 		Window.displayText("The " + self.name + " creeps up to " + Victim, self.name, 2)
 		Window.displayText("The " + self.name + " wants to pickpocket " + Victim, ">", 1)
         
+        # if the Victim is a fighter, they can fight back:
         if Victim.fighter == True:  #FIX ME
             {read, rate, new_game_state} = self.pickpocket_fighter(game_state, Victim)
             if read == true:
-                return {rate, new_game_state}
+                return (rate, new_game_state)
     
+    	# wait for the DM to interact with this event:
 		if self.Event.wait(SHORTWAIT) is False:
+			# the DM did not interact, do something horrible:
 			Window.displayText("The " + self.name + " attempted to pickpocket " + Victim, ">>", 2)
 			Window.displayText("And failed miserably. They lost 10gp.", ">>", 2)
 			with game_state.Lock():
 				People[self.name].Money -= 10
-				People[self.name].Money = min(0, People[self.name].Money)
+				People[self.name].Money = max(0, People[self.name].Money)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
+			# the DM interacted, now see if I succeed:
 			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
 			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
+				# I succeeded, now I pickpocket the Victim for all their money:
 				with game_state.Lock():
 					Money_Earned = People[Victim].Money
 					People[self.name].Money += Money_Earned
 					People[Victim].Money = 0
 				Window.displayText("The " + self.name + " pickpocketed " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
 			else:
+				# I failed:
 				Window.displayText("The " + self.name + " failed!!", "", 2)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
@@ -102,61 +123,109 @@ class Rogue(AI):
 		self.Event.clear()
 		return (Money_Earned, game_state)
 
-    
+    # I pickpocket another fighter:
     def pickpocket_fighter(self, game_state, Victim):
-        Poeople = game_state.Characters()
+        People = game_state.Characters()
         Window = game_state.Window()
         Money_Earned = People[Victim].Money
 
-        msg = ExpiringMessage(self.name, Victim, {"You're being pickpocketed", self.name}, time_in_seconds)
+        msg = ExpiringMessage(self.name, Victim, ("You're being pickpocketed", self.name), time_in_seconds)
         PostOffice.send_built_message(self.name, Victim, msg)
 
 
         msg.clear()
         if msg.read == True:
             self.InternalEvent.wait()
-            get mail from victim
+          #  get mail from victim
             mail_from = PostOffice.get_mail_from(victim, self.name)
             for msg in mail_from:
-                if msg.content == {"You tried to pickpocket me", rate}
-                return {True, rate, game_state}
+                if msg.content == ("You tried to pickpocket me", rate)
+                return (True, rate, game_state)
+            return (True, None, game_state) # just in case 
 
-            return{True, None, game_state} # just in case 
-        return {False, None, None}
+        return (False, None, None)
+
+    # I am being pickpocketed!
+	def pickpocket_me(game_state, Perpetrator):
+		People = game_state.Characters()
+        Window = game_state.Window()
+        Money_Lost = self.Money 
+        # wait for the DM to interact with this event:
+		if People[Perpetrator].Event.wait(SHORTWAIT) is False:
+			# DM did not interact, do something horrible:
+			Window.displayText("The " + Perpetrator + " attempted to pickpocket " + self.name, "", 2)
+			Window.displayText("And failed miserably. They lost 10gp.", "", 2)
+			Money_Lost = 0
+			with game_state.Lock():
+				People[Perpetrator].Money -= 10
+				People[Perpetrator].Money = max(0, People[self.name].Money)
+			Window.displayText("", "", 2)
+			Window.displayText("", "", 2)
+		else:
+			# DM is interacting with this event:
+			# add a penalty to Perpetrator's roll because I noticed:
+			roll = random.randint(0, 20) - self.sleight # simple d20 - sleight of hand
+			roll = max(0, roll)
+			prompt = Perpetrator + " rolled a " + str(roll)+", do they succeed?"
+			cmd = self.success_or_fail(Window, prompt)
+			# DM decided that the Perpetrator succeeded:
+			if cmd:
+				with game_state.Lock():
+					People[Perpetrator].Money += Money_Lost
+					self.Money = 0
+				Window.displayText("The " + Perpetrator + " pickpocketed " + self.name + " for " + str(Money_Earned) + " zenny!!", "", 2)
+			# DM decided that the Perpetrator fails:
+			else:
+				Window.displayText("The " + Perpetrator + " failed!!", "", 2)
+				Money_Lost = 0
+			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
+			Window.displayText("", "", 2)
+			Window.displayText("", "", 2)
+		# clear Perpetrator's event, so the DM can interact with them again:
+		People[Perpetrator].Event.clear()
+		return (Money_Lost, game_state)
 
 
-	# ideally this is for buildings/places, not people:
+	# steal from buildings (i.e. the Village or Tavern)
 	def steal(self, game_state, Victim):
 		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Window.displayText("The " + self.name +" sneaks up to " + Victim, "<", 2)
 		Window.displayText("The "+self.name +" wants to steal from " + Victim, "<", 1)
+
+		# wait for the DM to interact with this event:
 		if self.Event.wait(SHORTWAIT) is False:
+			# DM did not interact, do something horrible:
 			Money_Earned = 0
 			Window.displayText("Oh no! The " + self.name + " got caught stealing :(", "", 2)
-			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
+			Window.displayText(self.name + " had to pay " + str(self.Money) + " in fines.", "", 2)
+			self.Money = 0
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
+			# DM is interacting, do I succeed at stealing?
 			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
 			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
+				# I succeeded! Steal all their gold
 				with game_state.Lock():
-					Money_Earned = Places[Victim].Hidden_Money
+					Money_Earned = Places[Victim].Money
 					People[self.name].Money += Money_Earned
-					Places[Victim].Hidden_Money = 0
+					Places[Victim].Money = 0
 				Window.displayText("The "+self.name+" stole from " + Victim + " for " + str(Money_Earned) + " zenny!!", "", 2)
 			else:
+				# I failed...
 				Money_Earned = 0
 				Window.displayText("The "+self.name+" failed!!", "", 2)
-			Window.displayText("The "+self.name+" now has " + str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
+		# clear my event so that the DM can interact with me again
 		self.Event.clear()
 		return (Money_Earned, game_state)
 
+	# get my maximum utility, total utility, and best victim for stealing:
 	def stealing_utility(self, game_state):
 		Places = game_state.Locations()
 		Window = game_state.Window()
@@ -164,34 +233,16 @@ class Rogue(AI):
 		total_money = 0
 		victim = None
 		for (name, place) in Places.items():
-#			Window.displayText(name + " has " + str(place.Hidden_Money) + " hidden zenny", "", 1)
-			if name != self.name:
-				total_money += place.Hidden_Money
-				if place.Hidden_Money >= max_money:
-					max_money = place.Hidden_Money
-					victim = name
+			total_money += place.Money
+			if place.Money >= max_money:
+				max_money = place.Money
+				victim = name
 		return (max_money, total_money, victim)
 
-
-	def default_action(self, game_state, N=None):
-		MAX_UTILITY = 10000000
-		People = game_state.Characters()
-		Window = game_state.Window()
-		People[self.name].counter += 1
-		if People[self.name].counter >= 2:
-			Window.displayText(self.name + " went to the dungeon and got eaten by a Troll.", "", 2)
-			exit(0)
-		Window.displayText("Waiting to go to dungeon...", "", 2)
-		game_state.set_Characters(People)
-		return (MAX_UTILITY, game_state)
-
-	def default_utility(self, game_state):
-		MAX_UTILITY = 10000000
-		return (MAX_UTILITY, MAX_UTILITY)
-
-
-
-	def plead_for_money(self, Window, Person):
+	# plead for money from Person:
+	# If I'm chaotic, I don't learn about the monster
+	# If I'm good, I learn about the monster and am now ready for battle!
+	def plead(self, Window, Person):
 		if self.Alignment == "chaotic":
 			Window.displayText("Fine, didn't like you much anyway.", self.name, 2)
 		else:
@@ -206,104 +257,93 @@ class Rogue(AI):
 		return
 
 
+	# someone is asking me:
+	def askMe(Window, Asker):
+		# If I know about the monster, share that information:
+		if self.ready2battle.is_set():
+			Window.displayText("Yo, I heard there's a dragon. Help me slay it!", self.name, 2)
+			Window.displayText("Ok.", Asker.name, 2)
+			Asker.ready2battle.set()
+		# otherwise, tell them to go away:
+		else:
+			Window.displayText("Man, don't disturb me.", self.name, 2)
+		return
+
+	# ask a person for money, depending on dialogue options, I can learn
+	# information about a monster, and get ready to battle.
 	def ask(self, game_state, Person):
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Window.displayText("The "+ self.name +" walks up to " + Person, "<", 2)
 		Window.displayText("The "+self.name+" wants to talk to " + Person, "<", 1)
+
+		# wait for the DM to interact with me:
 		if self.Event.wait(SHORTWAIT) is False:
+			# DM did not interact, nothing happens:
 			Window.displayText(Person + " ignores the " + self.name, "", 2)
 			return (0, game_state)
-		self.Event.clear()
+		
 		Window.displayText("The "+self.name+" waits for "+Person+" to respond.", "", 2)
 
 		"""
 		NOTE: THIS COULD MAKE A DEADLOCK HAPPEN:
+		if Person.fighter:
+			ask them!
 		"""
-		with People[Person].Lock:
-			Window.displayText("The "+Person+" turns to the "+self.name, "", 2)
-			prompt = "How should " + Person + " greet the " + self.name +"?"
-			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + self.name + "! Get away from me!!"}
-			Window.print_options(dic, prompt)
-			if Window.Event.wait(LONGWAIT) is True:
-				Window.Event.clear()
-				if Window.command == "0":
-					Window.displayText("Well Hello there, weary Traveler.", Person, 2)
-					Window.displayText("What brings you to this flashy " + Person +"?", Person, 2)
 
-					if self.Alignment == "chaotic":
-						Window.displayText("Need some money, bro.", self.name, 2)
-						dic0 = "Got gold for ye, but there's a price..."
-						extended0 = [(Person, "I got some gold for ye, but"), (Person, "it comes with a price."), \
-									(self.name, "...I need to pay for free money?"), (Person, "Aie, not with ye gold," ),(Person, "but with ye body."), \
-									(self.name, "WHAT?!"), (Person, "There's a dragon need'n some slay'n."),(Person," You do that, you get me gold."), \
-									(self.name, "Oh, that's what you meant..."),(self.name, "I'll consider it.")]
-					else:
-						Window.displayText("Yo, you got any quests with rewards?", self.name, 2)
-						dic0 = "There's a dragon need'n some slay'n"
-						extended0 = [(Person, "You in need of quest? Har Har Har!"),(Person," A quest I got for ye."), \
-						             (Person, "I heard there's a violent,"),(Person,"vicious dragon haunting the land"), \
-						             (Person, "Slay that beast, and I'll give ye my thanks."), \
-						             (Person, "..also some gold, I guess."), (self.name, "Many thanks, my good " + Person +", I'll kill it immediately!")]
-					prompt = "How should " + Person + " respond?"
-					dic.clear()
-					dic = {"0":dic0, "1":"You know what? I don't like your attitude."}
-					Window.print_options(dic, prompt)
-					if Window.Event.wait(LONGWAIT) is True:
-						Window.Event.clear()
-						if Window.command == "0":
-							for (speaker, dialogue) in extended0:
-								Window.displayText(dialogue, speaker, 2)
-							self.ready2battle.set()
-						else:
-							Window.displayText("You know what? You're too shady.", Person, 2)
-							Window.displayText("I don't deal with sketchy characters.", Person, 2)
-							self.plead_for_money(Window, Person)
-				else:
-					Window.displayText("GAARGHH?!! You foul " + self.name + ".", Person, 2)
-					Window.displayText("I have no business with you.", Person, 2)
-					self.plead_for_money(Window, Person)
-			else:
-				Window.displayText(Person + " ignores the " + self.name, "", 2)
+		# Ask the NPC:
+		People[People].askMe(Window, self)
+
+		self.Event.clear()
 		Window.displayText("", "", 2)
 		Window.displayText("", "", 2)
 		return (0, game_state)
 
 
+	# ask utility is random, person is random:
 	def ask_utility(self, game_state):
 		People = game_state.Characters()
 		people_list = People.keys()
 		people_list.remove(self.name)
 		victim = people_list[random.randint(0, len(people_list) - 1)]
-		#return (random.random() * 100, random.random() * 100, victim)
-		return (random.randint(0, 1), 1, victim)
+		return (random.random() * 100, random.random() * 100, victim)
+		#return (random.randint(0, 1), 1, victim)
 
 
+	# attack the monster!
 	def attack(self, finished, Monster, game_state):
 		self.Event.clear()
 		Window = game_state.Window()
+
+		# I decided to lounge in the back, doing nothing:
 		if self.lounge is True:
 			Window.displayText(self.name +" lounges in the back, doing nothing.", "", 2)
 			return
+		# I'm in critical condition!
 		if self.health < 5:
 			Window.displayText(self.name + " is breathing heavily; their face is scrunched up, blood drenching their clothes.", "", 2)
 
+		# I decide to steal from the Monster:
 		if random.random() < 0.5:
 			Window.displayText(self.name + " becomes invisible, inching towards the " + Monster.name + "'s pile of gold.", "", 2)
 			Window.displayText(self.name + " wants to steal from the " + Monster.name, "", 1)
+			# wait for the DM to interact with me:
 			if self.Event.wait(LONGWAIT) is False:
+				# The DM does not interact, something horrible happens:
 				self.Event.clear()
 				Window.displayText(self.name + " tries to do something, fails, and hurts themself.", "", 2)
 				self.health -= 2
 				return
-			self.Event.clear()
+			# DM is interacting with me, do I succeed?
 			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
 			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
 			dic = {"s":"success", "f":"failure"}
 			Window.print_options(dic, prompt)
+			# wait for DM to choose an option:
 			if Window.Event.wait(LONGWAIT) is True:
 				Window.Event.clear()
 				if Window.command is "s":
+					# I succeeded!
 					Window.displayText(self.name+ " steals 10gp from "+ Monster.name, "", 2)
 					Window.displayText("ROAAARRRWR!! Me Gold!! Not me Gold!!", Monster.name, 2)
 					Window.displayText(Monster.name+" bites their lip in disgust; their teeth pierce their skin and draw blood.", "", 2)
@@ -314,6 +354,7 @@ class Rogue(AI):
 						if Monster.health <= 0:
 							finished.set()
 				else:
+					# I failed...
 					if roll > 15:
 						Window.displayText(self.name + " glares at the Dungeon Master |:<", "", 1)
 					Window.displayText("Swiper no swiping!", Monster.name, 2)
@@ -321,21 +362,26 @@ class Rogue(AI):
 					Window.displayText("Swiper no swiping!", Monster.name, 2)
 					Window.displayText("Oh, man!", self.name, 2)
 					Window.displayText(self.name + " failed to steal any gold.", "", 1)
+				self.Event.clear()
 				return
 		else:
+			# I decide to talk to the Monster:
 			Window.displayText(self.name + " wants to talk to the "+ Monster.name, "", 1)
 			Window.displayText(self.name + " waltzs up to the " + Monster.name, "", 2)
+			# Wait for DM to interact with me:
 			if self.Event.wait(LONGWAIT) is False:
+				# DM did not interact, do something horrible:
 				Window.displayText(self.name + " tries to do something, fails, and hurts themself.", "", 2)
 				self.health -= 2
 				return
-			self.Event.clear()
+			# DM is interacting with me, do I succeed?
 			roll = random.randint(0, 20) + self.persuasion  # simple d20 - persuasion check
 			Window.displayText(self.name + " rolled a " + str(roll) + " on their persuasion check.", "", 1)
 			prompt = "How does " + Monster.name+ " respond?"
 			dic = {"0":"How dare ye! Face my flames instead!", 
 			       "1":"Hm...I'll listen to what ye have to say."}
 			Window.print_options(dic, prompt)
+			# wait for DM to choose an option:
 			if Window.Event.wait(LONGWAIT) is True: 
 				Window.Event.clear()
 				if Window.command is "0":
@@ -350,7 +396,7 @@ class Rogue(AI):
 						Window.displayText("I'm just here for the money.", self.name, 2)
 						Window.displayText("Pay me, and I'll leave you alone.", self.name, 2)
 						dic0 = "Here's 100gp to attack the guy next to you."
-
+						# find another fighter to hurt:
 						victim = None
 						People = game_state.Characters()
 						for (name, person) in People.items():
@@ -363,9 +409,9 @@ class Rogue(AI):
 							extended0 = [(Monster.name, "Here's 100 gold to attack " + victim),
 							             (self.name, "Ok."), ("", self.name +" throws a knife into " + victim),
 							             (victim, "WTH?!?! OW")]
-						else:
+						else: # I'm the only fighter:
 							extended0 = [(self.name, "...I'm the only one here...right?"), (Monster.name, "Hehehehe...")]
-					else:
+					else: # I'm good:
 						Window.displayText("Why, good sir, are you attacking villagers?", self.name, 2)
 						dic0 = "None of ye beezwax, busta"
 						Who = Monster.name
@@ -379,25 +425,31 @@ class Rogue(AI):
 					dic.clear()
 					dic = {"0":dic0, "1":"ALL THE FLAMES!!"}
 					Window.print_options(dic, prompt)
+					# wait for DM to choose:
 					if Window.Event.wait(LONGWAIT) is True: 
 						Window.Event.clear()
 						if Window.command is "0":
 							for (name, dia) in extended0:
 								Window.displayText(dia, name, 2)
 							if self.Alignment is "chaotic":
-								self.Money += 100
+								# I got paid to hurt someone else:
 								if victim is not None:
 									People = game_state.Characters()
 									with game_state.Lock():
 										People[victim].health -= 5
+										self.Money += 100
 							else:
+									# I'm good and decided to lounge around.
 									self.lounge = True
 						else:
 							Window.displayText("How dare ye think ye can speak with me!", "Dragon", 2)
 							Window.displayText("Face my spit instead, cretein!", "Dragon", 2)
 							Window.displayText(Who+" spits fire all over the "+self.name+"!", "", 2)
 							self.health -= 3
+						self.Event.clear()
 						return
+		# this happens when the DM decided not to choose an option:
+		self.Event.clear()
 		Window.displayText(self.name + " tries to do something, fails, and hurts themself.", "", 2)
 		self.health -= 2
 		return
