@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
  Avita Sharma, Eric Wyss, David Taus
  DM or DIE!!
@@ -157,8 +158,8 @@ def main():
 	# this "ensures" that the window will be open before the threads start
 	# writing to it.
 	def start_with_delay(thread):
-			thread.start()
-			return
+		thread.start()
+		return
 
 	# create an AI thread:
 	Rogue_thread = threading.Thread(target=rogue.life, args=(game_state,))
@@ -181,24 +182,7 @@ def main():
 
 	Battle_thread.join()
 	Window_thread.join()
-	#Rogue_thread.join()
-	#Rogue_thread1.join()
 
-	
-	#DM_thread.join()
-
-
-	# start the window/game:
-	
-	#root = Tk()
-	#root.geometry("500x500")
-	#root2 = Tk()
-	#root2.geometry("1400x755")
-
-	#app = Window(root2)
-	#app2 = Window(root2)
-
-	#root2.mainloop()
 	return 
 
 
