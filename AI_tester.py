@@ -120,21 +120,21 @@ def main():
 
 	# create the main window:
 	window = Tk()
-	window.geometry("1332x755")
-	window.config(bg = "#d9ff66")
+	window.geometry("1328x755")
+	window.config(bg = "#99ff99")
 	DM = DungeonMaster(window)
 
 	# opening prompt:
-	prompt  = "Hi Dungeon Master, welcome to your new campaign!"
-	prompt0 = "There are characters for you to interrupt (i). You can"
-	prompt1 = "also print (p) a list of characters and actions "
-	prompt2 = "if you forget. Spelling counts!"
-	prompt3 = "Press any button to start the game."
+#	prompt  = "Hi Dungeon Master, welcome to your new campaign!"
+#	prompt0 = "There are characters for you to interrupt (i). You can"
+#	prompt1 = "also print (p) a list of characters and actions "
+#	prompt2 = "if you forget. Spelling counts!"
+#	prompt3 = "Press any button to start the game."
 
-	DM.displayText(prompt, "", 1)
-	DM.displayText(prompt0, "", 1)
-	DM.displayText(prompt1, "", 1)
-	DM.displayText(prompt2, "", 1)
+#	DM.displayText(prompt, "", 1)
+#	DM.displayText(prompt0, "", 1)
+#	DM.displayText(prompt1, "", 1)
+#	DM.displayText(prompt2, "", 1)
 
 	boxes = PostOffice()
 	for name in [rogue.name, rogue1.name]:

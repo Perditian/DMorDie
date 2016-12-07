@@ -23,11 +23,11 @@ class GameState(object):
 		self.__Messages   = Messaging
 		self.__Locations  = Locations
 		self.__window     = Window
-		self.__Lock       = threading.Lock()
-		self.__Lock2      = threading.Lock()
+		self.__Lock       = threading.RLock()
+#		self.__Lock2      = threading.RLock()
 
-	def Lock(self):
-		return self.__Lock2
+#	def Lock(self):
+#		return self.__Lock2
 
 	def Messages(self):
 		with self.__Lock:
