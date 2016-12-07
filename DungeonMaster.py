@@ -1,8 +1,6 @@
 """
- Avita Sharma
+ Avita Sharma, Eric Wyss, David Taus
  Dungeon Master Class
-
-TODO: add Messaging
 """ 
 
 from AI import AI 
@@ -17,11 +15,12 @@ import time
 try:
     # for Python2
     from Tkinter import *
+    from tkFont import Font as font
 except ImportError:
     # for Python3
     from tkinter import *
-
-from tkinter import font
+    from tkinter import font
+    
 
 from math import ceil
 import threading
@@ -30,13 +29,19 @@ class DungeonMaster:
 	#TODO: add Inventory
 	# initializes the Dungeon Master with the given input and output streams
 	def __init__(self, master):
-		self.start_text = Text(master, padx = 250, insertwidth = 0, spacing1 = "80", font = font.Font(font = ("Courier New", 26, "normal")), bg = "#99ff99", relief = "flat", wrap = "word", width = 40, height = 4)
+#		self.start_text = Text(master, padx = 250, insertwidth = 0, spacing1 = "80", font = font.Font(font = ("Courier New", 26, "normal")), bg = "#99ff99", relief = "flat", wrap = "word", width = 40, height = 4)
+		self.start_text = Text(master, padx = 250, insertwidth = 0, spacing1 = "80", font = font(family="Courier New", size=26, weight="normal"), bg = "#99ff99", relief = "flat", wrap = "word", width = 40, height = 4)
 		self.start_text.tag_configure('tag-center', justify = 'center')
 		self.start_text.insert('end', "Hi Dungeon Master, welcome to your new campaign! \nThere are characters for you to interrupt (i). \nYou can also print (p) a list of characters and actions if you forget. \nSpelling counts! \n", 'tag-center')
 		self.start_text.grid(row = 0, column = 0)
 		self.start_spacing = Frame(master, height = 100, bg = "#99ff99")
 		self.start_spacing.grid(row = 1, column = 0)
-		self.start_button = Button(master, text = "BEGIN", font = font.Font(font = ("Courier New", 14, "bold")), command = lambda: self.game_screen(master), width = 50, height = 4, bg = "#ccccff")		
+		try:
+			# for Python 3:
+			self.start_button = Button(master, text = "BEGIN", font = font.Font(font = ("Courier New", 14, "bold")), command = lambda: self.game_screen(master), width = 50, height = 4, bg = "#ccccff")
+		except AttributeError:
+			# for Python 2:
+			self.start_button = Button(master, text = "BEGIN", font = font(family = "Courier New", size = 14, weight = "bold"), command = lambda: self.game_screen(master), width = 50, height = 4, bg = "#ccccff")		
 		self.start_button.grid(row = 2, column = 0)
 
 
@@ -47,6 +52,7 @@ class DungeonMaster:
 		self.screen2Lock = threading.Lock()
 		self.Event = threading.Event()
 		self.command = ""
+		
 		self.narratorFont = font.Font(font = ("Courier New", 12, "bold"))
 		self.otherFont = font.Font(font = ("Courier New", 12, "normal"))
 		#self.Game_State.Characters
