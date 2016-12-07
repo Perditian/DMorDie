@@ -49,6 +49,11 @@ class AI:
 		self.Location = Location
 		self.zombie = False
 
+		self.msg_cmds = {"pickpocket":["pickpocket you", "been pickpocket"],
+		                 "ask":["ask you", "been ask"], 
+		                 "kill":["kill you", "been kill"],
+		                 "flirt":["flirt you", "been flirt"]}
+
 	# right now: determined completely randomly
 	# returns the set of actions for the decided goal
 	def decide_goal(self, exclude = []):
@@ -88,16 +93,24 @@ class AI:
 	# For now, messages are functions which take in the AI and Game State as parameters
 	# Good reason for polymorphic functions --> pass in NPCs or DM instead of AI
 	def handle_messages(self, game_state):
-		Messages = game_state.Messages()
-		my_mail = Messages.get_mail(self.__ID)
-		for fun in my_mail:
-			fun(self, game_state)
-		return
+		MailBox = game_state.Messages()
+		Mail = [msg for msg in MailBox.get_Mail(self.name) if msg.valid == True]
+		for msg in Mail:
+			if msg.valid:
+				msg.readme()
+				(text, args) = msg.content
+				if text is (self.msg_cmds["pickpocket"])[0]:
+					self.pickpocket_me(game_state, args)
+				elif text is (self.msg_cmds["ask"])[0]:
+					self.ask_me(game_state, args)
+		#		elif text is (self.msg_cmds["kill"])[0]:
+		#			self.kill_me(game_state, args)
+		#		elif text is (self.msg_cmds["flirt"])[0]:
+		#			self.flirt_me(game_state, args)
+			return
 		
 	# basic loop for the AI to follow, runs forever.
 	def life(self, game_state):
-		# First Handle Messages, Resolve messages before proceeding
-		#handle_messages(self, game_state)
 		Life = True
 		while Life:
 			# I am in battle, stop doing actions: (kill thread)
@@ -105,6 +118,8 @@ class AI:
 				Window = game_state.Window()
 				Window.displayText(self.name + " goes to the Dungeon.", "", 2)
 				return
+			# First Handle Messages, Resolve messages before proceeding
+			self.handle_messages(game_state)
 			goalist = []
 			action = None
 			# if there are no profitable actions to do, I prepare for battle:

@@ -59,7 +59,7 @@ class Dragon:
 					Player = dic[Window.command]
 					dam = random.randint(0, 20) #normal d20
 					Window.displayText("The Dragon attacks "+Player+" and deals "+str(dam)+" damage", "", 1)
-					if Player is "themself":
+					if Player == "themself":
 						self.health -= dam
 						if self.health <= 0:
 							finished.set()
@@ -67,10 +67,10 @@ class Dragon:
 						# attack the player
 						People[Player].health -=dam
 						try:
-   				 			People[Player].lounge = False
+							People[Player].lounge = False
 						except AttributeError:
 							pass
-    					if not People[Player].zombie:
+						if not People[Player].zombie:
 							People[Player].health = max(0, People[Player].health)
 							if People[Player].health <= 0:
 								Window.displayText("Oh no! "+Player+" is in critical condition!!", "", 2)

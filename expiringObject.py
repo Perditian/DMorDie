@@ -15,7 +15,7 @@ class ExpiringMessage(object):
             self.thread = threading.Thread(target=self.delAfter, args=(duration,))
             self.thread.start()
 
-    def read(self):
+    def readme(self):
         with self.mutex:
             self.read = True
 

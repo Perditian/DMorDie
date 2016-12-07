@@ -36,7 +36,7 @@ class Action:
 		#Window.displayText("My success: " + str(self.success), ">", 2)
 		if actual_utility is None:
 			# we reached a contradiction; do nothing:
-			Window.displayText("OBJECTION! *FINGER POINT* THERE'S A CONTRADICTION!", ">", 2)
+			#Window.displayText("OBJECTION! *FINGER POINT* THERE'S A CONTRADICTION!", ">", 2)
 			return game_state
 
 		# prevent division by zero:

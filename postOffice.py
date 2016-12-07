@@ -16,7 +16,7 @@ class PostOffice(object):
     
 
 
-    def send_built_Message(sef, sender, recipient, message):
+    def send_built_Message(self, sender, recipient, message):
         if sender in self.PO_Boxes and recipient in self.PO_Boxes:
             with self.mutex:
                 self.PO_Boxes[recipient].append(message)

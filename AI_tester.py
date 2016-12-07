@@ -12,6 +12,7 @@ import threading
 import random
 from DungeonMaster import DungeonMaster
 from GameState import GameState
+from postOffice import PostOffice
 from Battle import *
 import sys
 
@@ -34,7 +35,10 @@ class NPC (AI):
 
 	# for Rogues who ask the NPCs:
 	# in future, when we expand the NPC classes, we can vary the dialogue:
-	def askMe(self, Window, Asker):
+	def ask_me(self, game_state, Askername):
+			Window = game_state.Window()
+			People = game_state.Characters()
+			Asker = People[Askername]
 			Window.displayText("The "+self.name+" turns to the "+Asker.name, "", 2)
 			prompt = "How should " + self.name + " greet the " + Asker.name +"?"
 			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + Asker.name + "! Get away from me!!"}
@@ -70,11 +74,12 @@ class NPC (AI):
 							for (speaker, dialogue) in extended0:
 								Window.displayText(dialogue, speaker, 2)
 							# Asker is ready for battle!
-							Asker.ready2battle.set()
+							with game_state.Lock():
+								Asker.ready2battle.set()
 						else:
 							Window.displayText("You know what? You're too shady.", self.name, 2)
 							Window.displayText("I don't deal with sketchy characters.", self.name, 2)
-							Asker.plead(Window, Person)
+							Asker.plead(Window, self.name)
 				else:
 					# DM chose choice 1: GAH! Get away from me!
 					Window.displayText("GAARGHH?!! You foul " + Asker.name + ".", self.name, 2)
@@ -131,7 +136,12 @@ def main():
 	DM.displayText(prompt1, "", 1)
 	DM.displayText(prompt2, "", 1)
 
-	game_state = GameState({}, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan,
+	boxes = PostOffice()
+	for name in [rogue.name, rogue1.name]:
+		boxes.add_Name(name)
+
+
+	game_state = GameState(boxes, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan,
 					barkeep.name:barkeep},
 		         {Tavern.name:Tavern, Village.name:Village}, DM)
 

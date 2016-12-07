@@ -60,16 +60,83 @@ class Warrior(AI):
 
 
 	# someone is asking me:
-	def askMe(self, Window, Asker):
+	def ask_me(self, game_state, Askername):
 		# If I know about the monster, share that information:
+		People = game_state.Characters()
+		Window = game_state.Window()
+		PostOffice = game_state.Messages()
+		Asker = People[Askername]
 		if self.ready2battle.is_set():
 			Window.displayText("Yo, I heard there's a dragon. Help me slay it!", self.name, 2)
 			Window.displayText("Ok.", Asker.name, 2)
-			Asker.ready2battle.set()
+			with game_state.Lock():
+				Asker.ready2battle.set()
 		# otherwise, tell them to go away:
 		else:
 			Window.displayText("Man, don't disturb me.", self.name, 2)
+
+		# message to send to Asker:
+		sending = self.msg_cmds["ask"]
+		msg = ExpiringMessage(self.name, (sending[1]), LONGWAIT)
+		PostOffice.send_built_Message(self.name, Asker.name, msg)
+		# set the Asker's internal event to signal we sent them a message:
+		with game_state.Lock():
+			Asker.InternalEvent.set()
 		return
+
+	# I am being pickpocketed!
+	def pickpocket_me(self, game_state, Perpetrator):
+		People = game_state.Characters()
+		Window = game_state.Window()
+		PostOffice = game_state.Messages()
+		Money_Lost = self.Money 
+		# wait for the DM to interact with this event
+		if People[Perpetrator].Event.wait(SHORTWAIT) is False:
+			# DM did not interact, do something horrible:
+			Window.displayText("The " + Perpetrator + " attempted to pickpocket " + self.name, "", 2)
+			Window.displayText("Ha! You lousy " + Perpetrator+".", self.name, 2)
+			Window.displayText(Perpetrator+"'s pride is hurt. They lost 1 emotional health.", "", 2)
+			Money_Lost = 0
+			with game_state.Lock():
+				People[Perpetrator].health -= 1
+				People[Perpetrator].health = max(0, People[self.name].health)
+				Window.displayText("", "", 2)
+				Window.displayText("", "", 2)
+		else:
+			# DM is interacting with this event:
+			# add a penalty to Perpetrator's roll because I noticed:
+			roll = random.randint(1, 20) - Perpetrator.sleight # simple d20 - sleight of hand
+			roll = max(1, roll)
+			myroll = random.randint(1, 20) 
+			prompt = Perpetrator + " rolled a " + str(roll)+", and "+self.name+ \
+			         " rolled a "+ str(myroll)+", does "+Perpetrator+" succeed?"
+			cmd = self.success_or_fail(Window, prompt)
+			# DM decided that the Perpetrator succeeded:
+			if cmd:
+				with game_state.Lock():
+					People[Perpetrator].Money += Money_Lost
+					self.Money = 0
+				Window.displayText("The " + Perpetrator + " pickpocketed " + self.name + " for " + str(Money_Earned) + " zenny!!", "", 2)
+			# DM decided that the Perpetrator fails:
+			else:
+				Window.displayText("The " + Perpetrator + " failed!!", "", 2)
+				Money_Lost = 0
+				Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
+				Window.displayText("", "", 2)
+				Window.displayText("", "", 2)
+		# clear Perpetrator's event, so the DM can interact with them again:
+		People[Perpetrator].Event.clear()
+		"""
+		WE NEED 2 SEND THE VICTIM A MESSAGE: ("You tried to pickpocket me", MONEY_LOST)
+		"""
+		# message to send to Victim:
+		sending = self.msg_cmds["pickpocket"]
+		msg = ExpiringMessage(self.name, (sending[1], Money_Lost), LONGWAIT)
+		PostOffice.send_built_Message(self.name, Perpetrator, msg)
+		# set the Perpetrator's internal event to signal we sent them a message:
+		People[Perpetrator].InternalEvent.set()
+		return
+
 
 
 	def killpeople_utility(self, game_state):
@@ -319,22 +386,6 @@ class Warrior(AI):
 	def default_utility(self, game_state):
 		MAX_UTILITY = 10000000
 		return (MAX_UTILITY, MAX_UTILITY)
-
-
-
-	def plead_for_money(self, Window, Person):
-		if self.Alignment == "chaotic":
-			Window.displayText("Fine, didn't like you much anyway.", self.name, 2)
-		else:
-			Window.displayText("No! Please! I'm desperate for cash!", self.name, 2)
-			Window.displayText("I'll do anything! ANYTHING.", self.name, 2)
-			Window.displayText("Urgh, fine. There's a dragon.", Person, 2)
-			Window.displayText("Go slay it, and I MIGHT give ye a coin or two.", Person, 2)
-			Window.displayText("The " +self.name+" considers the offer...", "", 2)
-			Window.displayText("", "", 2)
-			Window.displayText("", "", 2)
-			self.ready2battle.set()
-		return
 
 
 	def flirt(self, game_state, Person):
