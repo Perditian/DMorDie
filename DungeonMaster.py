@@ -49,7 +49,9 @@ class DungeonMaster:
 		self.command = ""
 		self.narratorFont = font.Font(font = ("Courier New", 12, "bold"))
 		self.otherFont = font.Font(font = ("Courier New", 12, "normal"))
-		self.styles = {'Rogue': ('#ff5050', self.otherFont), 'Assasin': ('#993366', self.otherFont), '': ('#000000', self.narratorFont), '<': ('#ff3300', self.otherFont), '>': ('#802b00', self.otherFont), '>>' : ('#ff00ff', self.otherFont), 'You' : ('#0000cc', self.otherFont), '    ' : ('#663300', self.otherFont), 'The Old Man' : ('#808080', self.otherFont)}
+		#self.Game_State.Characters
+		self.shortcuts = {'r' : 'Rogue', 'a' : "Assasin", 'w' : 'Warrior'}
+		self.styles = {'Rogue': ('#ff5050', self.otherFont), 'Assasin': ('#993366', self.otherFont), '': ('#000000', self.narratorFont), '<': ('#ff3300', self.otherFont), '>': ('#802b00', self.otherFont), '>>' : ('#ff00ff', self.otherFont), 'You' : ('#0000cc', self.otherFont), '    ' : ('#663300', self.otherFont), 'The Old Man' : ('#808080', self.otherFont), 'Anita Colbier' : ('#00ffcc', self.otherFont)}
 
 		#master widgets
 		self.canvas1 = Canvas(master, scrollregion=(0,0,650,1350), borderwidth = 0, width = 650, height = 750, background = "#99ff99")
@@ -144,7 +146,10 @@ class DungeonMaster:
 	def interrupt(self, Character):
 		# unlock the Character's Event
 		People = self.Game_State.Characters()
-		People[Character].Event.set()
+		try:
+			People[self.shortcuts[Character]].Event.set()
+		except KeyError:
+			People[Character].Event.set()
 		return
 
 	def print_options(self, dictionary, prompt = "select a command:"):

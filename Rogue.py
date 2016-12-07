@@ -97,7 +97,7 @@ class Rogue(AI):
 			# the DM did not interact, do something horrible:
 			Window.displayText("The " + self.name + " attempted to pickpocket " + Victim, ">>", 2)
 			Window.displayText("And failed miserably. They lost 10gp.", ">>", 2)
-			with game_state.Lock():
+			with game_state._GameState__Lock:
 				People[self.name].Money -= 10
 				People[self.name].Money = max(0, People[self.name].Money)
 			Window.displayText("The " + self.name + " now has " + str(People[self.name].Money) + " zenny", "<", 1)
@@ -110,7 +110,7 @@ class Rogue(AI):
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
 				# I succeeded, now I pickpocket the Victim for all their money:
-				with game_state.Lock():
+				with game_state._GameState__Lock:
 					Money_Earned = People[Victim].Money
 					People[self.name].Money += Money_Earned
 					People[Victim].Money = 0
@@ -155,7 +155,7 @@ class Rogue(AI):
 			Window.displayText("The " + Perpetrator + " attempted to pickpocket " + self.name, "", 2)
 			Window.displayText("And failed miserably. They lost 10gp.", "", 2)
 			Money_Lost = 0
-			with game_state.Lock():
+			with game_state._GameState__Lock:
 				People[Perpetrator].Money -= 10
 				People[Perpetrator].Money = max(0, People[self.name].Money)
 				Window.displayText("", "", 2)
@@ -169,7 +169,7 @@ class Rogue(AI):
 			cmd = self.success_or_fail(Window, prompt)
 			# DM decided that the Perpetrator succeeded:
 			if cmd:
-				with game_state.Lock():
+				with game_state._GameState__Lock:
 					People[Perpetrator].Money += Money_Lost
 					self.Money = 0
 				Window.displayText("The " + Perpetrator + " pickpocketed " + self.name + " for " + str(Money_Earned) + " zenny!!", "", 2)
@@ -213,7 +213,7 @@ class Rogue(AI):
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
 				# I succeeded! Steal all their gold
-				with game_state.Lock():
+				with game_state._GameState__Lock:
 					Money_Earned = Places[Victim].Money
 					People[self.name].Money += Money_Earned
 					Places[Victim].Money = 0
@@ -351,7 +351,7 @@ class Rogue(AI):
 					Window.displayText(self.name+ " steals 10gp from "+ Monster.name, "", 2)
 					Window.displayText("ROAAARRRWR!! Me Gold!! Not me Gold!!", Monster.name, 2)
 					Window.displayText(Monster.name+" bites their lip in disgust; their teeth pierce their skin and draw blood.", "", 2)
-					with game_state.Lock():
+					with game_state._GameState__Lock:
 						self.Money += 10
 					with Monster.Lock():
 						Monster.health -= 10
@@ -439,7 +439,7 @@ class Rogue(AI):
 								# I got paid to hurt someone else:
 								if victim is not None:
 									People = game_state.Characters()
-									with game_state.Lock():
+									with game_state._GameState__Lock:
 										People[victim].health -= 5
 										self.Money += 100
 							else:
