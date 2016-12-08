@@ -427,14 +427,22 @@ class Warrior(AI):
 		NOTE: THIS COULD MAKE A DEADLOCK HAPPEN:
 		"""
 		with People[Person].Lock:
-			Flirter
-			Window.displayText("The "+Person+" turns to the "+self.name, "", 2)
+			Flirter = self.name
+			Window.displayText("The "+Person+" turns to the "+Flirter, "", 2)
 			
-			if self.Alignment is "chaotic":
-			
+			if People[Flirter].Alignment is "chaotic":
+				Window.displayText("Oh, "+Person+", if I had a star for every time you've brightened my day, I'd have a galaxy", FLirter, 2)
+				Window.displayText("I used to think love() was abstract, until you implemented it in MyHeart.", Flirter, 2)
+				Window.displayText("Did you cast singularity? Cause the closer I get to you, the faster time slips by.", FLirter, 2)
 			else:
-				Window.displayText("Hey, "+)
-			prompt = "How should " + Person + " greet the " + self.name +"?"
+				Window.displayText("Hey "+Person+", if you were a chicken, you'd be impeccable  ( ͡° ͜ʖ ͡°)", Flirter, 2)
+				Window.displayText("Are you the square root of -1? Cause you can't be real", Flirter, 2)
+				Window.displayText("If I was an OS your process would have top priority", Flirter, 2)
+				Window.displayText("I give you epsilon, you give me delta. Together, we find limits!", Flirter, 2)
+			if People[Flirter].zombie:
+				Window.displayText("Hi. I'm a zombie. Can I eat you?", Flirter, 2)
+			
+			prompt = "How should " + Person + " respond " + self.name +"?"
 			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + self.name + "! Get away from me!!"}
 			Window.print_options(dic, prompt)
 			if Window.Event.wait(LONGWAIT) is True:
