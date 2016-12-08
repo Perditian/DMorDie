@@ -23,12 +23,14 @@ class Warrior(AI):
 			self.Alignment = 'chaotic'
 			self.anger = 5
 			self.drunkeness = 3
+			self.flirter = 0 
 			drinking_success = 0.4
 			kill_success = 0.6 
 		else:
 			self.Alignment = 'good'
 			self.anger = 3
 			self.drunkeness = 5
+			self.flirter = 3
 			drinking_success = 0.6
 			kill_success = 0.4
 
@@ -177,12 +179,14 @@ class Warrior(AI):
 		health_taken = 0
 		if self.Alignment is 'chaotic':
 			Window.displayText("Hey! "+ Victim +"! You lookin' at me funny?", self.name, 2)
-			if self.drunkeness >= 10:
-				Window.displayText("Yo, you're drunk, you need to calm down.", Victim, 2)
-				Window.displayText("I'm not drunk *hic*, YOU'RE drunk! Enough talk, fight me!", self.name, 2)
+			Window.displayText("Uh..no? Maybe? Whats it to ya if I did?", Victim, 2)
+			Window.displayText("I don't take too kindly to rude folk. In fact, I think it's a public service if I eliminated all of them.", self.name, 2)
 		else:			
 			Window.displayText(self.name+", you're village called. They want their idiot back", Victim, 2)
 			Window.displayText(Victim+ ", you insulted me! I must duel to regain my honor!", self.name, 2)
+		if self.drunkeness >= 10:
+				Window.displayText("Yo, you're drunk, you need to calm down.", Victim, 2)
+				Window.displayText("I'm not drunk *hic*, YOU'RE drunk! Enough talk, fight me!", self.name, 2)
 		if self.zombie:
 			Window.displayText("Dude, you stink and your face is fallin off", Victim, 2)
 			Window.displayText("ITS CAUSE IMMA ZOMBAE GHHHRRRR", self.name, 2)
@@ -392,8 +396,7 @@ class Warrior(AI):
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Window.displayText("The "+ self.name +" saunters up to " + Person, "", 2)
-		Window.displayText()
-		Window.displayText("The "+self.name+" wants to talk to " + Person, "", 1)
+		Window.displayText("The "+self.name+" wants to flirt with " + Person, "", 1)
 		if self.Event.wait(SHORTWAIT) is False:
 			Window.displayText(Person + " ignores the " + self.name, "", 2)
 			return (0, game_state)
@@ -405,6 +408,13 @@ class Warrior(AI):
 		"""
 		with People[Person].Lock:
 			Window.displayText("The "+Person+" turns to the "+self.name, "", 2)
+			
+			if self.Alignment is "
+			
+			
+			
+			
+			Window.displayText()
 			prompt = "How should " + Person + " greet the " + self.name +"?"
 			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + self.name + "! Get away from me!!"}
 			Window.print_options(dic, prompt)
