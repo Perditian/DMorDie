@@ -112,14 +112,13 @@ class AI:
 	# basic loop for the AI to follow, runs forever.
 	def life(self, game_state):
 		Life = True
+		Window = game_state.Window()
+		#turnstile for starting game:
+		Window._DungeonMaster__Lock.acquire()
+		Window._DungeonMaster__Lock.release()
 		while Life:
-			Window = game_state.Window()
-			#turnstile for starting game
-			Window._DungeonMaster__Lock.acquire()
-			Window._DungeonMaster__Lock.release()
 			# I am in battle, stop doing actions: (kill thread)
 			if self.kill.is_set():
-				Window = game_state.Window()
 				Window.displayText(self.name + " goes to the Dungeon.", "", 2)
 				return
 			# First Handle Messages, Resolve messages before proceeding
@@ -129,7 +128,6 @@ class AI:
 			# if there are no profitable actions to do, I prepare for battle:
 			while action is None:
 				if len(goalist) == len(self.Goals.keys()):
-					Window = game_state.Window()
 					Window.displayText(self.name+" is ready to do battle!!", "", 2)
 					self.ready2battle.set()
 					# reset the goalist, so I continue to do actions

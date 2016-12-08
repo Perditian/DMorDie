@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 """
  Avita Sharma, Eric Wyss, David Taus
  DM or DIE!!
  Main game loop
+ Uses Python 3
 """
 
 from AI import AI 
@@ -125,18 +126,6 @@ def main():
 	window.config(bg = "#99ff99")
 	DM = DungeonMaster(window)
 
-	# opening prompt:
-#	prompt  = "Hi Dungeon Master, welcome to your new campaign!"
-#	prompt0 = "There are characters for you to interrupt (i). You can"
-#	prompt1 = "also print (p) a list of characters and actions "
-#	prompt2 = "if you forget. Spelling counts!"
-#	prompt3 = "Press any button to start the game."
-
-#	DM.displayText(prompt, "", 1)
-#	DM.displayText(prompt0, "", 1)
-#	DM.displayText(prompt1, "", 1)
-#	DM.displayText(prompt2, "", 1)
-
 	boxes = PostOffice()
 	for name in [rogue.name, rogue1.name]:
 		boxes.add_Name(name)
@@ -150,41 +139,22 @@ def main():
 
 	dagon = Dragon("Menacing Dragon")
 
-
-	# create the Dungeon Master thread:
-	#DM_thread = threading.Thread(target=DM.life, args=(game_state,))
-	#DM_thread.start()
-
-	# this "ensures" that the window will be open before the threads start
-	# writing to it.
-	def start_with_delay(thread):
-		thread.start()
-		return
-
-	# create an AI thread:
+	# create Playable Character threads:
 	Rogue_thread = threading.Thread(target=rogue.life, args=(game_state,))
-	Rouge_delay = threading.Timer(1.0, start_with_delay, [Rogue_thread])
-	Rouge_delay.start()
-	
-
 	Rogue_thread1 = threading.Thread(target=rogue1.life, args=(game_state,))
-	Rouge_delay1 = threading.Timer(1.0, start_with_delay, [Rogue_thread1])
-	Rouge_delay1.start()
+	Rogue_thread.start()
+	Rogue_thread1.start()
 
-
+	# create the Battle thread:
 	battle = Battle()
 	Battle_thread = threading.Thread(target=battle.life, args=(dagon,
 		            [Rogue_thread, Rogue_thread1], game_state))
 	Battle_thread.start()
 
-	Window_thread = threading.Thread(target=window.mainloop())
-	Window_thread.start()
-
+	# open the main window:
+	window.mainloop()
 	Battle_thread.join()
-	Window_thread.join()
-
 	return 
-
 
 if __name__ == '__main__':
 	main()

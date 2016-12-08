@@ -342,7 +342,7 @@ class Rogue(AI):
 
 		# if the Victim is a fighter, they can fight back:
 		if People[Person].fighter == True:  #FIX ME
-			print "Asking a fighter: " + Person
+			print ("Asking a fighter: " + Person)
 			read = False
 			(read, new_game_state) = self.ask_fighter(game_state, Person)
 			if read == True:
@@ -351,7 +351,7 @@ class Rogue(AI):
 				return (0, game_state)
 
 		# Ask the NPC:
-		print "asking NPC: " + Person
+		print ("asking NPC: " + Person)
 		People[Person].ask_me(game_state, self.name)
 
 		self.Event.clear()

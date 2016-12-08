@@ -21,8 +21,7 @@ class PostOffice(object):
             with self.mutex:
                 self.PO_Boxes[recipient].append(message)
         else:
-            print "Attempted to send message to PID: "+ str(PID) + """ which
-            does not exist in PostOffice\n"""
+            print ("Attempted to send message to PID: "+ str(PID) + " which does not exist in PostOffice\n")
 
     def send_Expiring_Message(self, sender, recipient, message, duration): #duration in seconds     
         if sender in self.PO_Boxes and recipient in self.PO_Boxes:
@@ -30,8 +29,7 @@ class PostOffice(object):
                 msg = ExpiringMessage(sender, message, duration)
                 self.PO_Boxes[recipient].append(msg)
         else:
-            print "Attempted to send message to PID: "+ str(PID) + """ which
-            does not exist in PostOffice\n"""
+            print ("Attempted to send message to PID: "+ str(PID) + " which does not exist in PostOffice\n")
 
     def send_Message(self, sender, recipient, message):        
         if sender in self.PO_Boxes and recipient in self.PO_Boxes:    
@@ -39,8 +37,7 @@ class PostOffice(object):
             with self.mutex:
                 self.PO_Boxes[recipient].append(msg)
         else:
-            print "Attempted to send message to PID: "+ str(PID) + """ which
-            does not exist in PostOffice\n"""
+            print ("Attempted to send message to PID: "+ str(PID) + " which does not exist in PostOffice\n")
 
     def get_Mail(self, recipient):
         with self.mutex:
