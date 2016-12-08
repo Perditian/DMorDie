@@ -172,6 +172,22 @@ class Warrior(AI):
 					victim = name
 		return (max_health, total_health, victim)
 
+	def zombified(self):
+		if not self.zombie:
+			self.health = max(0, self.health)
+			if self.health <= 0:
+				self.dead = True
+				Window.displayText(self.name + " has killed themself.", "", 2)	
+				Window.displayText("The villagers dig a hole in the ground, and bury the "+self.name+"'s corpse.", "", 2)
+				Window.displayText("Three days go by...", "", 2)
+				Window.displayText("In the dead of night, the ground grinds its teeth. The sky shrieks.", "", 2)
+				Window.displayText("A hand bursts from the grave, and crawls itself out. A foot, torso, and body follow.", "", 2)
+				Window.displayText("The parts assemble themselves into the " + self.name+"!", "", 2)
+				Window.displayText("The "+self.name+" is now a zombie.", "", 2)
+				self.zombie     = True
+				self.drunkeness = 100
+				self.anger      = 100
+		return
 
 	def killpeople(self, game_state, Victim):
 		People = game_state.Characters()
@@ -179,11 +195,11 @@ class Warrior(AI):
 		health_taken = 0
 		if self.Alignment is 'chaotic':
 			Window.displayText("Hey! "+ Victim +"! You lookin' at me funny?", self.name, 2)
-			Window.displayText("Uh..no? Maybe? Whats it to ya if I did?", Victim, 2)
+			Window.displayText("Uh...no? Maybe? Whats it to ya if I did?", Victim, 2)
 			Window.displayText("I don't take too kindly to rude folk. In fact, I think it's a public service if I eliminated all of them.", self.name, 2)
 		else:			
-			Window.displayText(self.name+", you're village called. They want their idiot back", Victim, 2)
-			Window.displayText(Victim+ ", you insulted me! I must duel to regain my honor!", self.name, 2)
+			Window.displayText(self.name+", your village called. They want their idiot back", Victim, 2)
+			Window.displayText(Victim+ ", you've insulted me! I must duel to regain my honor!", self.name, 2)
 		if self.drunkeness >= 10:
 				Window.displayText("Yo, you're drunk, you need to calm down.", Victim, 2)
 				Window.displayText("I'm not drunk *hic*, YOU'RE drunk! Enough talk, fight me!", self.name, 2)
@@ -194,31 +210,20 @@ class Warrior(AI):
 		Window.displayText("The " + self.name + " wants to attack " + Victim, "", 1)
 		if self.Event.wait(SHORTWAIT) is False:
 			self.Event.clear()
+			Attacker = self.name
 			if self.drunkeness >= 10:
-				Window.displayText(self.name + " swings their fist at "+Victim+", but hit themself instead!", "", 2)
+				Window.displayText(Attacker + " swings their fist at "+Victim+", but hits themself instead!", "", 2)
+				Window.displayText("Ohhggrr...These stars are pretty pretty *hic* things.", Attacker, 2)
 			else:
-				Window.displayText("The " + self.name + " swings their axe at " + Victim + ", but ends up hitting themself instead.", ">>", 2)
+				Window.displayText("The " + Attacker + " swings their axe at " + Victim + ", but ends up hitting themself instead.", "", 2)
 			Window.displayText("Ha! Why you be hittin yourself?", Victim, 2)
-			Window.displayText(self.name +" lost 1 health.", "", 1)
+			Window.displayText(Attacker +" lost 5 health.", "", 1)
 			with game_state.Lock():
-				People[self.name].health -= 1
-				if not self.zombie:
-					People[self.name].health = max(0, People[self.name].health)
-					if self.health <= 0:
-						self.dead = True
-						Window.displayText(self.name + " has killed themself.", "", 2)	
-						Window.displayText("The villagers dig a hole in the ground, and bury the "+self.name+"'s corpse.", "", 2)
-						Window.displayText("Three days go by...", "", 2)
-						Window.displayText("In the dead of night, the ground grinds its teeth. The sky shrieks.", "", 2)
-						Window.displayText("A hand bursts from the grave, and crawls itself out. A foot, torso, and body follow.", "", 2)
-						Window.displayText("The parts assemble themselves into the " + self.name+"!", "", 2)
-						Window.displayText("The "+self.name+" is now a zombie.", "", 2)
-						self.zombie     = True
-						self.drunkeness = 100
-						self.anger      = 100
+				People[Attacker].health -= 5
+				People[Attacker].zombified()
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
-			health_taken = -1
+			health_taken = 5
 		else:
 			roll = random.randint(0, 20) + self.anger # simple d20 - hit roll
 			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
@@ -227,16 +232,16 @@ class Warrior(AI):
 				roll = random.randint(0, 12) + self.anger # simple d12 - hit roll
 				with game_state.Lock():
 					People[Victim].health -= roll
-					People[Victim].health = max(1, People[self.name].health)
-				if self.zombie:
-					Window.displayText("The undead " + self.name + "lunges out and bites "+ Victim+", dealing "+str(roll)+" damage!!", "", 2)
-				elif self.drunkeness >= 10:
-					Window.displayText(self.name+" spazes towards "+Victim+", seems to lunge sideways, but kicks upwards, sending "+Victim+" flying!!", "", 2)
+					People[Victim].health = max(1, People[Victim].health)
+				if People[Attacker].zombie:
+					Window.displayText("The undead " + Attacker + "lunges out and bites "+ Victim+", dealing "+str(roll)+" damage!!", "", 2)
+				elif People[Attacker].drunkeness >= 10:
+					Window.displayText(Attacker+" spazes towards "+Victim+", seems to lunge sideways, but kicks upwards, sending "+Victim+" flying!!", "", 2)
 				else:
-					Window.displayText("The " + self.name + " swings their axe at " + Victim + " and deals " + str(roll) + " damage!!", "", 2)
+					Window.displayText("The " + Attacker + " swings their axe at " + Victim + " and deals " + str(roll) + " damage!!", "", 2)
 				health_taken = roll
 			else:
-				Window.displayText("The " + self.name + " swings their axe and misses!!", "", 2)
+				Window.displayText("The " + Attacker + " swings their axe and misses!!", "", 2)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		self.Event.clear()
@@ -270,13 +275,14 @@ class Warrior(AI):
 					Window.displayText(self.name + " sees a Windmill in the distance, and becomes enraged", "", 2)
 					Window.displayText("WINDMILL YOU SHALL CURSE MY FAMILY'S NAME NO LONGER!", self.name, 2)
 					Window.displayText(self.name + " ignores the Ogre, and destroys the Windmill instead.", "", 2)
+					Window.displayText(Victim +" now has one less Windmill", "", 2)
 				else:
 					with game_state.Lock():
 						Window.displayText("Argh! Why do you hurt me so?", "Ogre", 2)
 						Window.displayText("Devilish creature! your existence is a bane in this universe.", self.name, 2)
 						Window.displayText("Begone!", self.name, 2)
 						Window.displayText(self.name+" slashes and pierces the Ogre. The Ogre slams and rushes "+self.name+" but slips, and is impaled. The Ogre is no more.", "", 2)
-
+						destroyed = roll
 						Places[Victim].health -= roll
 						if Places[Victim].health <= (Places[Victim].max_health * 0.5):
 							Window.displayText(Victim +" has a reputation for being unkind to Ogre-kind. No Ogre comes there anymore.", "", 2)
@@ -286,13 +292,16 @@ class Warrior(AI):
 			else:
 				Window.displayText(self.name + " slahes and thrashes against the infernal Ogre", "", 2)
 				Window.displayText("But the Ogre is really a Windmill!", "", 1)
-				Window.displayText(Victim +" now has one less Windmill", "", 1)
+				roll = random.randint(1, 12)
+				destroyed = roll
+				Window.displayText("The Windmill deals "+ str(roll) + " damage to "+ self.name, "", 1)
+				self.zombified()
 			self.Event.clear()
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 			self.drunkeness -= 1
 			self.drunkeness = max(0, self.drunkeness)
-		return (Money_Earned, game_state)
+		return (destroyed, game_state)
 
 	def drinking_utility(self, game_state):
 		Locations = GameState.Locations()
@@ -310,20 +319,22 @@ class Warrior(AI):
 		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
-
+		health = 0
 		Window.displayText(self.name + " is in the Tavern", "", 2)
 		Window.displayText(Tavern.barkeep.name+", gimme another!", self.name, 2)
 		with game_state.Lock():
 			if self.Money > 0:
 				Window.displayText(self.name+" shines a gold piece, and slams it on the table.", "", 2)
 				self.Money -= 1
-				self.health += math.ceil((self.max_health - self.health) * 0.1) # gain 10% of what you need
+				health = math.ceil((self.max_health - self.health) * 0.1)
+				self.health += health # gain 10% of what you need
 				self.health = min(self.max_health, self.health)
 			else:
-				Window.displayText("I need a coin, for a drink.", Tavern.barkeep.name, 2)
+				Window.displayText("I need a coin, for some cold beer.", Tavern.barkeep.name, 2)
 				Window.displayText("Put'er on my tab.", self.name, 2)
 				Tavern.tab[self.name] = Tavern.tab.get(self.name, 0) + 1
-				self.health += math.ceil((self.max_health - self.health) * 0.1) # gain 10% of what you need
+				health = math.ceil((self.max_health - self.health) * 0.1)
+				self.health += health # gain 10% of what you need
 				self.health = min(self.max_health, self.health)
 				if Tavern.tab[self.name] >= 5:
 					Window.displayText("Dude, if ya keep drinkin without payin, I'mma hafta kick you out permanently.", Tavern.barkeep.name)
@@ -336,7 +347,7 @@ class Warrior(AI):
 		Window.displayText("Gahahaha! Mangy mortal, your puny stomach can't even contain one of my tankards.", "Imanorc", 2)
 		Window.displayText("You're on! *glug* *glug* *chug* *glug* *glug*", self.name, 2)
 		Window.displayText("Issat all you got? *gloug* *gloug* *choug* *gloug* *gloug*", "Imanorc", 2)
-		Window.displayText("After almost clearing the "+Tavern.name+", ", "", 2)
+		Window.displayText("After almost clearing "+Tavern.name+" out of ale, ", "", 2)
 		Window.displayText("*Hic* Howwabout we armwrestle an whoever wins picksupthe tab?", self.name, 2)
 		Window.displayText("Arright, pun-*hic*-y warrior.", "Imanorc", 2)
 		Window.displayText(self.name + " wants to armwrestle Imanorc", "", 1)
@@ -348,31 +359,40 @@ class Warrior(AI):
 			with game_state.Lock():
 				self.health -= 5
 				self.health = max(0, self.health)
-				self.money -= 5
-				self.money = max(0, self.money)
+				health -= 5
+				if self.money <= 0:
+					Tavern.tab[self.name] = Tavern.tab.get(self.name, 0) + 5
+				else:
+					self.money -= 5
+					self.money = max(0, self.money)
 		else:
 			self.Event.clear()
-			roll = random.randint(0, 20) + self.drunkeness # simple d20 - athletics
+			roll = random.randint(0, 20) + self.anger # simple d20 - athletics
 			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
-					Window.displayText("*BANG* Ha! I Win!!", self.name, 2)
-					Window.displayText("Nooo!! How could this be!", "Imanorc", 2)
-					with game_state.Lock():
-						self.money  += 5
-						self.health += math.ceil((self.max_health - self.health) * 0.1)
-						self.health = min(self.max_health, self.health)
-						self.drunkeness += 5
+				Window.displayText("*BANG* Ha! I Win!!", self.name, 2)
+				Window.displayText("Nooo!! How could this be!", "Imanorc", 2)
+				with game_state.Lock():
+					self.money  += 5
+					health += math.ceil((self.max_health - self.health) * 0.1)
+					self.health += math.ceil((self.max_health - self.health) * 0.1)
+					self.health = min(self.max_health, self.health)
+					self.drunkeness += 5
 			else:
 				Window.displayText("Grrrrghhh!!!! Why you so strronng???", self.name, 2)
 				Window.displayText("Gahahaha! You're so weak.", "Imanorc", 2)
 				Window.displayText(self.name+"'s arm is strained.", "", 2)
 				with game_state.Lock():
-					self.health -= 1
+					self.health -= 3
 					self.health = max(0, self.health)
-					self.money -= 5
-					self.money = max(0, self.money)
-		return
+					health -= 3
+					if self.money <= 0:
+						Tavern.tab[self.name] = Tavern.tab.get(self.name, 0) + 5
+					else:
+						self.money -= 5
+						self.money = max(0, self.money)
+		return (health, game_state)
 
 
 	def default_action(self, game_state, N=None):
@@ -407,14 +427,13 @@ class Warrior(AI):
 		NOTE: THIS COULD MAKE A DEADLOCK HAPPEN:
 		"""
 		with People[Person].Lock:
+			Flirter
 			Window.displayText("The "+Person+" turns to the "+self.name, "", 2)
 			
-			if self.Alignment is "
+			if self.Alignment is "chaotic":
 			
-			
-			
-			
-			Window.displayText()
+			else:
+				Window.displayText("Hey, "+)
 			prompt = "How should " + Person + " greet the " + self.name +"?"
 			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + self.name + "! Get away from me!!"}
 			Window.print_options(dic, prompt)
