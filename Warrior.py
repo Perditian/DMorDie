@@ -1,6 +1,6 @@
 """
 Warrior Class, extends AI
-
+Avita Sharma, Eric Wyss, David Taus
 """
 
 from AI import AI 
@@ -18,7 +18,7 @@ class Warrior(AI):
 
 	def __init__(self, Alignment = 0, name = "Barbarian", Home = None):
 		# anger = fighting ability
-		# drunkeness = how drunk am I
+		# drunkeness = how drunk am I HOW DRUNK AM I
 		if Alignment is 0:
 			self.Alignment = 'chaotic'
 			self.anger = 5
@@ -429,20 +429,32 @@ class Warrior(AI):
 		with People[Person].Lock:
 			Flirter = self.name
 			Window.displayText("The "+Person+" turns to the "+Flirter, "", 2)
-			
-			if People[Flirter].Alignment is "chaotic":
-				Window.displayText("Oh, "+Person+", if I had a star for every time you've brightened my day, I'd have a galaxy", FLirter, 2)
-				Window.displayText("I used to think love() was abstract, until you implemented it in MyHeart.", Flirter, 2)
+			roll = random.randint(0, 20) + self.flirter # simple d20 - persuasion
+			if People[Flirter].Alignment is "good":
+				if roll >= 10:
+					Window.displayText("I used to think love() was abstract, until you implemented it in MyHeart.", Flirter, 2)
+					dic_succ = "There's more of my functions in your class"
+					ext_succ = (Person, "Oh, that's not the only thing I've put in your class")
+					dic_fail = "Uh, I'm an Erlang programmer."
+					ext_fail = (Person, "Uh, I'm an Erlang programmer. I don't go anywhere near classes--especially abstract ones.")
+				else:
+					Window.displayText("Oh, "+Person+", if I had a star for every time you've brightened my day, I'd have a galaxy", FLirter, 2)
+				Window.displayText("I give you epsilon, you give me delta. Together, we find limits!", Flirter, 2)
 				Window.displayText("Did you cast singularity? Cause the closer I get to you, the faster time slips by.", FLirter, 2)
 			else:
-				Window.displayText("Hey "+Person+", if you were a chicken, you'd be impeccable  ( ͡° ͜ʖ ͡°)", Flirter, 2)
-				Window.displayText("Are you the square root of -1? Cause you can't be real", Flirter, 2)
-				Window.displayText("If I was an OS your process would have top priority", Flirter, 2)
-				Window.displayText("I give you epsilon, you give me delta. Together, we find limits!", Flirter, 2)
+				if roll >= 10:
+					Window.displayText("If I was an OS your process would have top priority", Flirter, 2)
+					dic_succ = 
+					dic_fail = "Sorry, but I'm dead to your locks."
+				else:
+					Window.displayText("Are you the square root of -1? Cause you can't be real", Flirter, 2)
+				Window.displayText("Hey "+Person+", if you were a chicken, you'd be impeccable  ( ͡° ͜ʖ ͡°)", Flirter, 2)	
+				Window.displayText("Are you made of copper and tellurium? Because you're CuTe", Flirter, 2)
+				
 			if People[Flirter].zombie:
-				Window.displayText("Hi. I'm a zombie. Can I eat you?", Flirter, 2)
+				Window.displayText("Hi. I'm also a zombie. Can I eat you?", Flirter, 2)
 			
-			prompt = "How should " + Person + " respond " + self.name +"?"
+			prompt = Flirter + " rolled a "+ str(roll)+ ". How should " + Person + " respond to " + Flirter +"?"
 			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + self.name + "! Get away from me!!"}
 			Window.print_options(dic, prompt)
 			if Window.Event.wait(LONGWAIT) is True:
