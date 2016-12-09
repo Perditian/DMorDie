@@ -48,6 +48,7 @@ class AI:
 		self.fighter = fighter
 		self.Location = Location
 		self.zombie = False
+		self.flirted_with = []
 
 		self.msg_cmds = {"pickpocket":["pickpocket you", "been pickpocket"],
 		                 "ask":["ask you", "been ask"], 

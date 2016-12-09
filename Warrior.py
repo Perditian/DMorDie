@@ -51,6 +51,7 @@ class Warrior(AI):
 		self.Money = 100
 		self.max_health = 20
 		self.branded = True
+		self.flirted_with = []\
 
 	def success_or_fail(self, Window, prompt = None):
 		Window.print_options({'s':'success', 'f':'failure'}, prompt)
@@ -88,6 +89,7 @@ class Warrior(AI):
 
 	# I am being pickpocketed!
 	def pickpocket_me(self, game_state, Perpetrator):
+		People[Perpetrator].Event.clear()
 		People = game_state.Characters()
 		Window = game_state.Window()
 		PostOffice = game_state.Messages()
@@ -122,7 +124,7 @@ class Warrior(AI):
 				with game_state.Lock():
 					People[Perpetrator].Money += Money_Lost
 					self.Money = 0
-				Window.displayText("The " + Perpetrator + " pickpocketed " + self.name + " for " + str(Money_Earned) + " zenny!!", "", 2)
+				Window.displayText("The " + Perpetrator + " pickpocketed " + self.name + " for " + str(Money_Lost) + " zenny!!", "", 2)
 			# DM decided that the Perpetrator fails:
 			else:
 				Window.displayText("The " + Perpetrator + " failed!!", "", 2)
@@ -142,7 +144,6 @@ class Warrior(AI):
 		# set the Perpetrator's internal event to signal we sent them a message:
 		People[Perpetrator].InternalEvent.set()
 		return
-
 
 
 	def killpeople_utility(self, game_state):
@@ -174,6 +175,7 @@ class Warrior(AI):
 					victim = name
 		return (max_health, total_health, victim)
 
+	# check if I can turn into a zombie, and if so zombify me!
 	def zombified(self):
 		if not self.zombie:
 			self.health = max(0, self.health)
@@ -208,17 +210,103 @@ class Warrior(AI):
 			mail_from = PostOffice.get_Mail_From(Victim, self.name)
 			received = sending[1]
 			for msg in mail_from:
-				if msg.content == (received, rate):
-					return (True, rate, game_state)
+				if msg.content[0] == received:
+					return (True, msg.content[1], game_state)
 			return (True, None, game_state) # just in case 
 
 		return (False, None, None)
 
 
+	def kill_me(self, game_state, Perpname):
+		People = game_state.Characters()
+		Window = game_state.Window()
+		PostOffice = game_state.Messages()
+		Perpetrator = People[Perpname]
+		health_taken = 0
+		if Perpetrator.Alignment is 'chaotic':
+			Window.displayText("Hey! "+ self.name +"! You lookin' at me funny?", Perpname, 2)
+			Window.displayText("Uh...no? Maybe? Whats it to ya if I did?", Perpname, 2)
+			Window.displayText("I don't take too kindly to rude folk. In fact, I think it's a public service if I eliminated all of them.", Perpname, 2)
+		else:			
+			Window.displayText(Perpname+", your village called. They want their idiot back", self.name, 2)
+			Window.displayText(self.name+ ", you've insulted me! I must duel to regain my honor!", Perpname, 2)
+		if Perpetrator.drunkeness >= 10:
+				Window.displayText("Yo, you're drunk, you need to calm down.", self.name, 2)
+				Window.displayText("I'm not drunk *hic*, YOU'RE drunk! Enough talk, fight me!", Perpname, 2)
+		if Perpetrator.zombie:
+			Window.displayText("Dude, you stink and your face is fallin off", self.name, 2)
+			Window.displayText("ITS CAUSE IMMA ZOMBAE GHHHRRRR", Perpname, 2)
+
+		Window.displayText("The " + Perpname + " wants to attack " + self.name, "", 1)
+		if Perpetrator.Event.wait(SHORTWAIT) is False:
+			Perpetrator.Event.clear()
+			Attacker = Perpname
+			Victim = self.name
+			if Perpetrator.drunkeness >= 10:
+				Window.displayText(Attacker + " swings their fist at "+Victim+", but hits themself instead!", "", 2)
+				Window.displayText("Ohhggrr...These stars are pretty pretty *hic* things.", Attacker, 2)
+			else:
+				Window.displayText("The " + Attacker + " swings their axe at " + Victim + ", but ends up hitting themself instead.", "", 2)
+			Window.displayText("Ha! Why you be hittin yourself?", Victim, 2)
+			Window.displayText(Attacker +" lost 5 health.", "", 1)
+			with game_state.Lock():
+				Perpetrator.health -= 5
+				Perpetrator.zombified()
+			Window.displayText("", "", 2)
+			Window.displayText("", "", 2)
+			health_taken = 5
+		else:
+			roll = random.randint(0, 20) - self.anger # simple d20 - hit roll, penalized
+			prompt = Perpname + " rolled a " + str(roll)+", do they succeed?"
+			cmd = self.success_or_fail(Window, prompt)
+			if cmd:
+				roll = random.randint(0, 12) + Perpetrator.anger # simple d12 - hit roll
+				with game_state.Lock():
+					self.health -= roll
+					self.health = max(1, People[Victim].health)
+				if Perpetrator.zombie:
+					Window.displayText("The undead " + Attacker + "lunges out and bites "+ Victim+", dealing "+str(roll)+" damage!!", "", 2)
+				elif Perpetrator.drunkeness >= 10:
+					Window.displayText(Attacker+" spazes towards "+Victim+", seems to lunge sideways, but kicks upwards, sending "+Victim+" flying!!", "", 2)
+				else:
+					Window.displayText("The " + Attacker + " swings their axe at " + Victim + " and deals " + str(roll) + " damage!!", "", 2)
+				health_taken = roll
+			else:
+				Window.displayText("The " + Attacker + " swings their axe and misses!!", "", 2)
+			Window.displayText("", "", 2)
+			Window.displayText("", "", 2)
+		Perpetrator.Event.clear()
+		Perpetrator.drunkeness -= 1
+		Perpetrator.drunkeness = max(0, self.drunkeness)
+
+		"""
+		WE NEED 2 SEND THE VICTIM A MESSAGE: ("You tried to kill me", HEALTH_LOST)
+		"""
+		# message to send to Victim:
+		sending = self.msg_cmds["kill"]
+		msg = ExpiringMessage(self.name, (sending[1], health_taken), LONGWAIT)
+		PostOffice.send_built_Message(self.name, Perpetrator, msg)
+		# set the Perpetrator's internal event to signal we sent them a message:
+		Perpetrator.InternalEvent.set()
+		return (health_taken, game_state)
+
+
 	def killpeople(self, game_state, Victim):
+		self.Event.clear()
 		People = game_state.Characters()
 		Window = game_state.Window()
 		health_taken = 0
+
+		# if the Victim is a fighter, they can fight back:
+		if People[Victim].fighter == True:  #FIX ME
+			read = False
+			(read, rate, new_game_state) = self.pickpocket_fighter(game_state, Victim)
+			self.Event.clear()
+			if read == True:
+				return (rate, new_game_state)
+			else:
+				return (None, game_state)
+
 		if self.Alignment is 'chaotic':
 			Window.displayText("Hey! "+ Victim +"! You lookin' at me funny?", self.name, 2)
 			Window.displayText("Uh...no? Maybe? Whats it to ya if I did?", Victim, 2)
@@ -277,6 +365,7 @@ class Warrior(AI):
 
 	# ideally this is for buildings/places, not people:
 	def killplaces(self, game_state, Victim):
+		self.Event.clear()
 		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
@@ -343,6 +432,7 @@ class Warrior(AI):
 
 
 	def drinking(self, game_state, Tavern):
+		self.Event.clear()
 		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
@@ -419,10 +509,12 @@ class Warrior(AI):
 					else:
 						self.money -= 5
 						self.money = max(0, self.money)
+		self.Event.clear()
 		return (health, game_state)
 
 
 	def flirt(self, game_state, Person):
+		self.Event.clear()
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Window.displayText("The "+ self.name +" saunters up to " + Person, "", 2)
@@ -432,81 +524,131 @@ class Warrior(AI):
 			return (0, game_state)
 		self.Event.clear()
 		Window.displayText("The "+self.name+" waits for "+Person+" to respond.", "", 2)
+		
 
-		"""
-		NOTE: THIS COULD MAKE A DEADLOCK HAPPEN:
-		"""
-		with People[Person].Lock:
-			Flirter = self.name
-			Window.displayText("The "+Person+" turns to the "+Flirter, "", 2)
-			roll = random.randint(0, 20) + self.flirter # simple d20 - persuasion
-			if People[Flirter].Alignment is "good":
-				if roll >= 10:
-					Window.displayText("I used to think love() was abstract, until you implemented it in MyHeart.", Flirter, 2)
-					dic_succ = "There's more of my functions in your class"
-					ext_succ = (Person, "Oh, that's not the only thing I've put in your class")
-					dic_fail = "Uh, I'm an Erlang programmer."
-					ext_fail = (Person, "Uh, I'm an Erlang programmer. I don't go anywhere near classes--especially abstract ones.")
-				else:
-					Window.displayText("Oh, "+Person+", if I had a star for every time you've brightened my day, I'd have a galaxy", FLirter, 2)
-				Window.displayText("I give you epsilon, you give me delta. Together, we find limits!", Flirter, 2)
-				Window.displayText("Did you cast singularity? Cause the closer I get to you, the faster time slips by.", FLirter, 2)
+		Flirter = self.name
+		Window.displayText("The "+Person+" turns to the "+Flirter, "", 2)
+		roll = random.randint(0, 20) + self.flirter # simple d20 - persuasion
+		if People[Flirter].Alignment is "good":
+			if roll >= 10:
+				Window.displayText("I used to think love() was abstract, until you implemented it in MyHeart.", Flirter, 2)
+				dic_succ = "There's more of my functions in your class"
+				ext_succ = [(Person, "Oh, that's not the only thing I've put in your class"),
+							(Person, "But if you want access to my private functions, you need to do something for me."),
+							(Flirter, "I'll do anything for love()"), (Person, "Slay a terriplasty dragon in the dungeon and give me its gold."),
+							(Flirter, "and I will do that!")]
+				dic_fail = "Uh, I'm an Erlang programmer."
+				ext_fail = [(Person, "Uh, I'm an Erlang programmer. I don't go anywhere near classes--especially abstract ones."),
+							(Flirter, "I can be functional! Give me another chance!"), 
+							(Person, "...fine.")]
 			else:
-				if roll >= 10:
-					Window.displayText("If I was an OS your process would have top priority", Flirter, 2)
-					dic_succ = 
-					dic_fail = "Sorry, but I'm dead to your locks."
-				else:
-					Window.displayText("Are you the square root of -1? Cause you can't be real", Flirter, 2)
-				Window.displayText("Hey "+Person+", if you were a chicken, you'd be impeccable  ( ͡° ͜ʖ ͡°)", Flirter, 2)	
-				Window.displayText("Are you made of copper and tellurium? Because you're CuTe", Flirter, 2)
-				
-			if People[Flirter].zombie:
-				Window.displayText("Hi. I'm also a zombie. Can I eat you?", Flirter, 2)
+				Window.displayText("Oh, "+Person+", if I had a star for every time you've brightened my day, I'd have a galaxy", Flirter, 2)
+				dic_succ  = "Haha."
+				ext_succ  = [(Person, "Your name must be Andromeda, cause we are destined to collide"),
+							 (Flirter, "Oh that's a good one."), (Person, "If you wanna hear more, kill a dragon for me."),
+							 (Flirter, "Done and done! I'll be back before you know it!")] 
+				dic_fail  = "*Slap* Ew, don't come near me."
+				ext_fail  = [(Person, "*Punch* Get away from me, loser."), (Flirter, "Ow. I respect your decision, goodbye."),
+							 (Person, "*sigh* I was a bit too harsh...you'll have a minute to convince me.")]
+		else:
+			if roll >= 10:
+				Window.displayText("If I was an OS your process would have top priority", Flirter, 2)
+				dic_succ = "You're right! I've never starved when I'm with you."
+				ext_succ = [(Person, "So I'll never be starved waiting for you?",),
+							(Flirter, "I promise, you'll even be free of deadlocks if you share a room with me."),
+							(Person, "Ah, but I'm afraid I need to use your CPU time for something else."),
+							(Person, "There's a terriplasty dragon haunting the streets. Go bring its corpse to me and I'll release my lock in your empty room."),
+							(Flirter, "Will do! That mcdragin dragon is dead!")
+				dic_fail = "Sorry, but I'm dead to your locks."
+				ext_fail = [(Person, "Kill my thread now cause I'm dead to your locks."), 
+				            (Flirter, "Wait! Please give me another chance!"),
+				            (Person, "...fine")]
+			else:
+				Window.displayText("Are you the square root of -1? Cause you can't be real", Flirter, 2)
+				dic_succ = "I do need to integrate some curves."
+				ext_succ = [(Person, "Are you proficient in integrating my curves?"), 
+							(Flirter, "I never learned calculus, but I bet you could teach me."),
+							(Person, "If you wanna be my ward, you must prove yourself first."),
+							(Person, "Wrestle with the mighty dragon that lives in the dungeon and bring back an ear."),
+							(Person, "Only then I will teach you how to take tangents.")]
+				dic_fail = "...How did you know?"
+				ext_fail = [(Person, "How did you know I'm not real?"), 
+							(Person, "I've been trying to get back to the Polar Plane for years."),
+							(Person, "Do you know the way?"), (Flirter, "No, but I can brighten your day instead!")]
 			
-			prompt = Flirter + " rolled a "+ str(roll)+ ". How should " + Person + " respond to " + Flirter +"?"
-			dic = {"0":"Well Hello there, weary Traveler...", "1":"GAH! A " + self.name + "! Get away from me!!"}
-			Window.print_options(dic, prompt)
-			if Window.Event.wait(LONGWAIT) is True:
-				Window.Event.clear()
-				if Window.command == "0":
-					Window.displayText("Well Hello there, weary Traveler.", Person, 2)
-					Window.displayText("What brings you to this flashy " + Person +"?", Person, 2)
-
-					if self.Alignment == "chaotic":
-						Window.displayText("Need some money, bro.", self.name, 2)
-						dic0 = "Got gold for ye, but there's a price..."
-						extended0 = [(Person, "I got some gold for ye, but"), (Person, "it comes with a price."), \
-									(self.name, "...I need to pay for free money?"), (Person, "Aie, not with ye gold," ),(Person, "but with ye body."), \
-									(self.name, "WHAT?!"), (Person, "There's a dragon need'n some slay'n."),(Person," You do that, you get me gold."), \
-									(self.name, "Oh, that's what you meant..."),(self.name, "I'll consider it.")]
+		if People[Flirter].zombie:
+			Window.displayText("Hi. I'm also a zombie. Can I eat you?", Flirter, 2)
+		
+		prompt = Flirter + " rolled a "+ str(roll)+ ". How should " + Person + " respond to " + Flirter +"?"
+		dic = {"0":dic_succ, "1":dic_fail}
+		Window.print_options(dic, prompt)
+		if Window.Event.wait(LONGWAIT) is True:
+			Window.Event.clear()
+			if Window.command == "0":
+				for (speaker, dialogue) in ext_succ:
+					Window.displayText(dialogue, speaker, 2)
+				self.ready2battle.set()
+				People[Person].flirted_with.append(Flirter)
+			elif Window.command == "1":
+				for (speaker, dialogue) in ext_fail:
+					Window.displayText(dialogue, speaker, 2)
+				roll = random.randint(0, 20) + self.flirter # simple d20 - persuasion
+				if self.Alignment == "chaotic":
+					if roll >= 10:
+						Window.displayText("I give you epsilon, you give me delta. Together, we find limits!", Flirter, 2)
+						dic_succ = "You're under my big O notation."
+						ext_succ = [(Person, "I can surround you in my big O, but you've gotta tighten your lower bound."),
+									(Person, "Killing a dragon can help. There's one in the dungeons outside town."),
+									(Person, "Slay it, and we can talk later.")]
+						dic_fail = "Sorry but your asymptote diverges from mine."
+						ext_fail = (Person, "I am limitless, so please diverge away from me.")
 					else:
-						Window.displayText("Yo, you got any quests with rewards?", self.name, 2)
-						dic0 = "There's a dragon need'n some slay'n"
-						extended0 = [(Person, "You in need of quest? Har Har Har!"),(Person," A quest I got for ye."), \
-						             (Person, "I heard there's a violent,"),(Person,"vicious dragon haunting the land"), \
-						             (Person, "Slay that beast, and I'll give ye my thanks."), \
-						             (Person, "..also some gold, I guess."), (self.name, "Many thanks, my good " + Person +", I'll kill it immediately!")]
-					prompt = "How should " + Person + " respond?"
-					dic.clear()
-					dic = {"0":dic0, "1":"You know what? I don't like your attitude."}
-					Window.print_options(dic, prompt)
-					if Window.Event.wait(LONGWAIT) is True:
-						Window.Event.clear()
-						if Window.command == "0":
-							for (speaker, dialogue) in extended0:
-								Window.displayText(dialogue, speaker, 2)
-							self.ready2battle.set()
-						else:
-							Window.displayText("You know what? You're too shady.", Person, 2)
-							Window.displayText("I don't deal with sketchy characters.", Person, 2)
-							self.plead_for_money(Window, Person)
+						Window.displayText("Did you cast singularity? Cause the closer I get to you, the faster time slips by.", FLirter, 2)
+						dic_succ = "Only to pull you in closer."
+						ext_succ = [(Person, "My sphere will slowly drain your energy if you don't kill a dragon."),
+									(Flirter, "Uh..ok? I guess I can battle one."), (Person, "It's in the dungeon. Go get it.")]
+						dic_fail = "The field's going to detonate in 3 seconds."
+						ext_fail = [(Person, "My field is going to detonate in 3 seconds, wiping away everything in 5 meters."),
+									(Person, "I suggest you leave.")]
 				else:
-					Window.displayText("GAARGHH?!! You foul " + self.name + ".", Person, 2)
-					Window.displayText("I have no business with you.", Person, 2)
-					self.plead_for_money(Window, Person)
+					if roll >= 10:
+						Window.displayText("Hey "+Person+", if you were a chicken, you'd be impeccable  ( ͡° ͜ʖ ͡°)", Flirter, 2)
+						dic_succ = "Yeah, I guess I can accept that."
+						ext_succ = [(Person, "If you want to skin a chicken, you first need to carve up a dragon."),
+									(Person, "There's one in the dungeon."), (Flirter, "Great! I'll cook one up for you!")]
+						dic_fail = "If you were an egg, you'd be smelly and rotten, like your pick-up lines."
+						ext_fail = [(Person, "Go die.")]
+					else:
+						Window.displayText("Are you made of copper and tellurium? Because you're CuTe", Flirter, 2)
+						dic_succ = "Whatever, lets get this over with."
+						ext_succ = [(Person, "I need some dragon parts, go to the dungeon and get me some."),
+									(Flirter, "ok.")]
+						dic_fail = "How did you know I'm an android?"
+						ext_fail = [(Person, "I thought no one could see through my disguise as an organic. How did you know?"),
+									(Flirter, "Uh, cause you're CuTe?"), 
+									(Person, "Ha..nice try, but no.")]
+				prompt = "How should " + Person + " respond?"
+				dic.clear()
+				dic = {"0":dic_succ, "1":dic_fail}
+				Window.print_options(dic, prompt)
+				if Window.Event.wait(LONGWAIT) is True:
+					Window.Event.clear()
+					if Window.command == "0":
+						for (speaker, dialogue) in ext_succ:
+							Window.displayText(dialogue, speaker, 2)
+						self.ready2battle.set()
+						People[Person].flirted_with.append(Flirter)
+					else:
+						for (speaker, dialogue) in ext_fail:
+							Window.displayText(dialogue, speaker, 2)
+						Window.displayText("That was terrible.", Person, 2)
+						Window.displayText("Don't speak to me again.", Person, 2)
+						
 			else:
-				Window.displayText(Person + " ignores the " + self.name, "", 2)
+				Window.displayText("GAARGHH?!! Go away " + self.name + "!!", Person, 2)
+				Window.displayText("Or I'll make you.", Person, 2)
+		else:
+			Window.displayText(Person + " ignores the " + self.name, "", 2)
 		Window.displayText("", "", 2)
 		Window.displayText("", "", 2)
 		return (0, game_state)
@@ -527,13 +669,30 @@ class Warrior(AI):
 	def attack(self, finished, Monster, game_state):
 		self.Event.clear()
 		Window = game_state.Window()
-		if self.lounge is True:
-			Window.displayText(self.name +" lounges in the back, doing nothing.", "", 2)
-			return
+		#turnstile for starting game:
+			Window._DungeonMaster__Lock.acquire()
+			Window._DungeonMaster__Lock.release()
 		if self.health < 5:
 			Window.displayText(self.name + " is breathing heavily; their face is scrunched up, blood drenching their clothes.", "", 2)
 
-		if random.random() < 0.5:
+		if self.zombie:
+
+
+
+
+		elif self.drunkeness >= 5:
+
+
+
+		else:
+			if self.Alignment is "chaotic":
+				# Rage & attack twice
+			else:
+				# Flirt with dragon -- bonus if flirted with old man
+
+		return 
+
+
 			Window.displayText(self.name + " becomes invisible, inching towards the " + Monster.name + "'s pile of gold.", "", 2)
 			Window.displayText(self.name + " wants to steal from the " + Monster.name, "", 1)
 			if self.Event.wait(LONGWAIT) is False:

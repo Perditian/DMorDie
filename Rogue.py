@@ -79,6 +79,7 @@ class Rogue(AI):
 
 	# this Rogue pickpockets the Victim:
 	def pickpocket(self, game_state, Victim):
+		self.Event.clear()
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Money_Earned = People[Victim].Money
@@ -89,6 +90,7 @@ class Rogue(AI):
 		if People[Victim].fighter == True:  #FIX ME
 			read = False
 			(read, rate, new_game_state) = self.pickpocket_fighter(game_state, Victim)
+			self.Event.clear()
 			if read == True:
 				return (rate, new_game_state)
 			else:
@@ -143,8 +145,8 @@ class Rogue(AI):
 			mail_from = PostOffice.get_Mail_From(Victim, self.name)
 			received = sending[1]
 			for msg in mail_from:
-				if msg.content == (received, rate):
-					return (True, rate, game_state)
+				if msg.content[0] == received:
+					return (True, msg.content[1], game_state)
 			return (True, None, game_state) # just in case 
 
 		return (False, None, None)
@@ -155,6 +157,8 @@ class Rogue(AI):
 		Window = game_state.Window()
 		PostOffice = game_state.Messages()
 		Money_Lost = self.Money 
+		self.Event.clear()
+		People[Perpetrator].Event.clear()
 		# wait for the DM to interact with this event
 		if People[Perpetrator].Event.wait(SHORTWAIT) is False:
 			# DM did not interact, do something horrible:
@@ -185,7 +189,7 @@ class Rogue(AI):
 				with game_state._GameState__Lock:
 					People[Perpetrator].Money += Money_Lost
 					self.Money = 0
-				Window.displayText("The " + Perpetrator + " pickpocketed " + self.name + " for " + str(Money_Earned) + " zenny!!", "", 2)
+				Window.displayText("The " + Perpetrator + " pickpocketed " + self.name + " for " + str(Money_Lost) + " zenny!!", "", 2)
 			# DM decided that the Perpetrator fails:
 			else:
 				Window.displayText("The " + Perpetrator + " failed!!", "", 2)
@@ -210,6 +214,7 @@ class Rogue(AI):
 
 	# steal from buildings (i.e. the Village or Tavern)
 	def steal(self, game_state, Victim):
+		self.Event.clear()
 		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
@@ -281,6 +286,7 @@ class Rogue(AI):
 
 	# someone is asking me:
 	def ask_me(self, game_state, Askername):
+		self.Event.clear()
 		# If I know about the monster, share that information:
 		People = game_state.Characters()
 		Window = game_state.Window()
@@ -331,6 +337,7 @@ class Rogue(AI):
 	# ask a person for money, depending on dialogue options, I can learn
 	# information about a monster, and get ready to battle.
 	def ask(self, game_state, Person):
+		self.Event.clear()
 		People = game_state.Characters()
 		Window = game_state.Window()
 		Window.displayText("The "+ self.name +" walks up to " + Person, "<", 2)
@@ -378,6 +385,9 @@ class Rogue(AI):
 	def attack(self, finished, Monster, game_state):
 		self.Event.clear()
 		Window = game_state.Window()
+		#turnstile for starting game:
+		Window._DungeonMaster__Lock.acquire()
+		Window._DungeonMaster__Lock.release()
 
 		# I decided to lounge in the back, doing nothing:
 		if self.lounge is True:

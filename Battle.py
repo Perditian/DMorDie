@@ -33,6 +33,10 @@ class Dragon:
 	# fly away, set finished to true:
 	def attack(self, finished, GameState):
 		Window = GameState.Window()
+		#turnstile for starting game:
+		Window._DungeonMaster__Lock.acquire()
+		Window._DungeonMaster__Lock.release()
+
 		prompt = "What should the dragon do?"
 		dic = {"0":"attack!", "1":"Fly away"}
 		Window.print_options(dic, prompt)
@@ -54,6 +58,10 @@ class Dragon:
 				dic[str(i)] = "themself"
 				Window.print_options(dic, prompt)
 				# wait for DM to choose a person to attack:
+
+				#turnstile for pausing game:
+				Window._DungeonMaster__Lock.acquire()
+				Window._DungeonMaster__Lock.release()
 				if Window.Event.wait(LONGWAIT) is True:
 					Window.Event.clear()
 					Player = dic[Window.command]
