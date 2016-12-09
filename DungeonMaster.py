@@ -1,6 +1,8 @@
 """
- Avita Sharma, Eric Wyss, David Taus
+ Avita Sharma
  Dungeon Master Class
+
+TODO: add Messaging
 """ 
 
 from AI import AI 
@@ -15,12 +17,11 @@ import time
 try:
     # for Python2
     from Tkinter import *
-    from tkFont import Font as font
 except ImportError:
     # for Python3
     from tkinter import *
-    from tkinter import font
-    
+
+from tkinter import font
 
 from math import ceil
 import threading
@@ -29,24 +30,12 @@ class DungeonMaster:
 	#TODO: add Inventory
 	# initializes the Dungeon Master with the given input and output streams
 	def __init__(self, master):
-		try:
-			# for python3:
-			self.start_text = Text(master, insertwidth = 0, spacing1 = "80", font = font.Font(font = ("Courier New", 26, "normal")), bg = "#99ff99", relief = "flat", wrap = "word", width = 40, height = 4)
-		except AttributeError:
-			# for python2:
-			self.start_text = Text(master, insertwidth = 0, spacing1 = "80", font = font(family="Courier New", size=26, weight="normal"), bg = "#99ff99", relief = "flat", wrap = "word", width = 40, height = 4)
+		self.start_text = Text(master, insertwidth = 0, spacing1 = "45", font = font.Font(font = ("Courier New", 22, "normal")), bg = "#99ff99", relief = "flat", wrap = "word", width = 40, height = 8)
 		self.start_text.tag_configure('tag-center', justify = 'center')
-		self.start_text.insert('end', "Hi Dungeon Master, welcome to your new campaign! \nThere are characters for you to interrupt (i). \nYou can also print (p) a list of characters and actions if you forget. \nSpelling counts! \n", 'tag-center')
-		self.start_text.place(relx = .5, rely = .3, anchor = CENTER)
-		self.start_spacing = Frame(master, height = 100, bg = "#99ff99")
-		self.start_spacing.place(relx = .5, rely = .6, anchor = CENTER)
-		try:
-			# for Python 3:
-			self.start_button = Button(master, text = "BEGIN", font = font.Font(font = ("Courier New", 14, "bold")), command = lambda: self.game_screen(master), width = 50, height = 4, bg = "#ccccff")
-		except AttributeError:
-			# for Python 2:
-			self.start_button = Button(master, text = "BEGIN", font = font(family = "Courier New", size = 14, weight = "bold"), command = lambda: self.game_screen(master), width = 50, height = 4, bg = "#ccccff")		
-		self.start_button.place(relx = .5, rely = .8, anchor = CENTER)
+		self.start_text.insert('end', "Hi Dungeon Master, welcome to your new campaign! \nThere are characters for you to interrupt (i). \nYou can also print (p) a list of characters and actions if you forget. \nSpelling counts! \nYou can pause/unpause the game by typing 'pause' or 'unpause'\n", 'tag-center')
+		self.start_text.place(relx = 0.5, rely = 0.4, anchor = CENTER)
+		self.start_button = Button(master, text = "BEGIN", font = font.Font(font = ("Courier New", 14, "bold")), command = lambda: self.game_screen(master), width = 50, height = 4, bg = "#ccccff")		
+		self.start_button.place(relx = 0.5, rely = 0.85, anchor = CENTER)
 
 
 		self.numOfLines = 50
@@ -55,19 +44,15 @@ class DungeonMaster:
 		self.screen1Lock = threading.Lock()
 		self.screen2Lock = threading.Lock()
 		self.Event = threading.Event()
-
 		self.command = ""
-		try:
-			# for python 3:
-			self.narratorFont = font.Font(font = ("Courier New", 12, "bold"))
-			self.otherFont = font.Font(font = ("Courier New", 12, "normal"))
-		except AttributeError:
-			# for python 2:
-			self.narratorFont = font(family="Courier New", size=12, weight="bold")
-			self.otherFont = font(family="Courier New", size=12, weight="normal")
+		self.narratorFont = font.Font(font = ("Courier New", 12, "bold"))
+		self.otherFont = font.Font(font = ("Courier New", 12, "normal"))
 		#self.Game_State.Characters
-		self.shortcuts = {'r' : 'Rogue', 'a' : "Assasin", 'w' : 'Warrior'}
-		self.styles = {'Rogue': ('#ff5050', self.otherFont), 'Assasin': ('#993366', self.otherFont), '': ('#000000', self.narratorFont), '<': ('#ff3300', self.otherFont), '>': ('#802b00', self.otherFont), '>>' : ('#ff00ff', self.otherFont), 'You' : ('#0000cc', self.otherFont), '    ' : ('#663300', self.otherFont), 'The Old Man' : ('#808080', self.otherFont), 'Anita Colbier' : ('#00ffcc', self.otherFont)}
+		#TODO: pool of fonts, create fonts at beginning in function with parameters chars
+		self.shortcuts = {}
+
+		#self.shortcuts = {'r' : 'Rogue', 'a' : "Assasin", 'w' : 'Warrior'}
+		self.styles = {'Rogue': ('#ff5050', self.otherFont, 'r'), 'Assasin': ('#993366', self.otherFont, 'a'), '': ('#000000', self.narratorFont), '<': ('#ff3300', self.otherFont), '>': ('#802b00', self.otherFont), '>>' : ('#ff00ff', self.otherFont), 'You' : ('#0000cc', self.otherFont), '    ' : ('#663300', self.otherFont), 'The Old Man' : ('#808080', self.otherFont), 'Anita Colbier' : ('#00ffcc', self.otherFont)}
 
 		#master widgets
 		self.canvas1 = Canvas(master, scrollregion=(0,0,650,1350), borderwidth = 0, width = 650, height = 750, background = "#99ff99")
@@ -88,8 +73,9 @@ class DungeonMaster:
 		self.frame2 = Frame(self.canvas2, height = 1350, width = 650, bg = "#d9ff66" )
 		self.canvas2.configure(yscrollcommand = self.scrollBar2.set)
 
-		self.lines1 = [[Message(self.frame1, width = 640, bg = "#99ff99", font = ("Courier New", 12, "normal")), " " * 100] for i in range(self.numOfLines)]
-		self.lines2 = [[Message(self.frame2, width = 640, bg = "#d9ff66", font = ("Courier New", 12, "normal")), " " * 100] for i in range(self.numOfLines)]
+		self.text1 = Text(self.canvas1, wrap = WORD, height = 1350, bg = "#99ff99", font = self.narratorFont)
+		self.text2 = Text(self.canvas2, wrap = WORD, height = 1350, bg = "#d9ff66", font = self.narratorFont)
+		self.tags()
 
 		self.__Lock.acquire()
 
@@ -99,7 +85,6 @@ class DungeonMaster:
 		self.__Lock.release()
 		self.start_button.destroy()
 		self.start_text.destroy()
-		self.start_spacing.destroy()
 
 		self.canvas1.grid(row = 0, column = 0, columnspan = 2, rowspan = 2)
 		self.scrollBar1.grid(row = 0, column = 1, sticky = NE+SE)
@@ -114,25 +99,34 @@ class DungeonMaster:
 		self.canvas2.xview_moveto(0)
 		self.canvas2.yview_moveto(600)
 
-		self.frame1.grid(row = 0, column = 0, sticky = N+S)
-		self.canvas1.create_window((0,0), window = self.frame1, width = 650, height = 2650, tags = "self.frame1", anchor = "nw")
-		self.frame2.grid(row = 0, column = 0, sticky = N+S)
-		self.canvas2.create_window((0,0), window = self.frame2, width = 650, height = 2650, tags = "self.frame2", anchor = "nw")
+		self.text1.grid(row = 0, column = 0, sticky = N+S)
+		self.canvas1.create_window((0,0), window = self.text1, width = 650, height = 1300, tags = "self.frame1", anchor = "nw")
+		self.text2.grid(row = 0, column = 0, sticky = N+S)
+		self.canvas2.create_window((0,0), window = self.text2, width = 650, height = 1300, tags = "self.frame2", anchor = "nw")
 
 		self.entry1.bind('<Return>', self.callback1_1)
-		
-		#frame widgets
-		i = self.numOfLines-1
-		for line in self.lines1:
-			line[0].grid(row = i, column = 0, sticky = SW)
-			line[0].config(text = line[1])
-			i -= 1
 
-		i = self.numOfLines-1
-		for line in self.lines2:
-			line[0].grid(row = i, column = 0, sticky = W)
-			line[0].config(text = line[1])
-			i -= 1
+		self.text1.insert(END, ' \n' * 70)
+		self.text2.insert(END, ' \n' * 70)
+
+		for char in self.Game_State.Characters().keys():
+			if self.Game_State.Characters()[char].fighter:
+				if not (char in self.shortcuts):
+					self.shortcuts[char[0].lower()] = char
+				else:
+					duplicate = true
+					i = 2
+					while (duplicate):
+						if char.lower()+str(i) in self.shortcuts:
+							i+= 1
+						else:
+							self.shortcuts[char[0].lower()+str(i)] = char
+		print(self.shortcuts)
+
+	def tags(self):
+		for char in self.styles:
+			self.text1.tag_configure(char, foreground = self.styles[char][0], font = self.styles[char][1])
+			self.text2.tag_configure(char, foreground = self.styles[char][0], font = self.styles[char][1])
 
 
 	# gets the next command
@@ -164,9 +158,10 @@ class DungeonMaster:
 		# unlock the Character's Event
 		People = self.Game_State.Characters()
 		try:
-			People[self.shortcuts[Character]].Event.set()
-		except KeyError:
 			People[Character].Event.set()
+		except KeyError:
+			People[self.shortcuts[Character]].Event.set()
+
 		return
 
 	def print_options(self, dictionary, prompt = "select a command:"):
@@ -204,7 +199,10 @@ class DungeonMaster:
 		self.entry1.delete(0, END)
 		if (text == '0'):
 			for char in self.Game_State.Characters().keys():
-				self.displayText(char, ">>", 1)
+				if (len(self.styles[char]) == 3):
+					self.displayText(char + "- shortcut: " + self.styles[char][2], ">>", 1)
+				else:
+					self.displayText(char, ">>", 1)
 		elif (text == '1'):
 			self.displayText('i Name = Interrupt Name', ">>", 1)
 			self.displayText('p = Print Menu', ">> ", 1)
@@ -260,50 +258,29 @@ class DungeonMaster:
 				self.print_menu(args)
 
 	def displayText(self, message, msgFrom, screen):
-		style = self.styles[msgFrom]
+#		style = self.styles[msgFrom]
+		line = msgFrom + ": " + message + "\n"
 		if (screen == 1) :
 			displayFunction = self.displayText1
 			lock = self.screen1Lock
 		elif (screen == 2):
 			displayFunction = self.displayText2
 			lock = self.screen2Lock
-		numLines = int(ceil((len(msgFrom) + 3 + len(message)) / 55))
-		indent = " " * (len(msgFrom) + 2)
-		line = msgFrom + ": " + message[0:55]
 		with lock:
-			displayFunction(line, style)
-			for i in range(numLines-2):	 
-				line = indent + message[55*(i+1):55*(i+2)]
-				displayFunction(line, style)
-			if (numLines > 1):
-				line = indent + message[(numLines-1)*55:len(message)]
-				displayFunction(line, style)
+			displayFunction(line, msgFrom)
 		
 
-
-	def displayText1(self, message, style):
+	def displayText1(self, message, msgFrom):
 		if (message == " "):
 			return
-		for i in range(self.numOfLines-2, 0, -1):
-			lineAbove = self.lines1[i-1][1]
-			prevColor = self.lines1[i-1][0].cget('fg')
-			#prevSize = self.lines1[1-1][0].cget('size')
-			try:
-				# for python 3:
-				prevFont = font.Font(font = self.lines1[i-1][0].cget('font'))
-			except AttributeError:
-				# for python 2:
-				prevFont = font(font = self.lines1[i-1][0].cget('font'))
-			self.lines1[i][1] = lineAbove
-			self.lines1[i][0].config(text = lineAbove, fg = prevColor, font = prevFont)#, size = prevSize)
-
-		newText = message
-		try:
-			# for python 3:
-			self.lines1[0][0].config(text = newText, fg = style[0], font = style[1])#'-weight ' + style[1])
-		except AttributeError:
-			self.lines1[0][0].config(text = newText, fg = style[0], font = style[1])#'-weight ' + style[1])
-		self.lines1[0][1] = newText
+		self.text1.insert(END, message, msgFrom)
+		self.text1.see(END)
+	
+	def displayText2(self, message, msgFrom):
+		if (message == " "):
+			return
+		self.text2.insert(END, message, msgFrom)
+		self.text2.see(END)
 
 	def callback2_1(self, event):
 		text = self.entry2.get()
@@ -314,21 +291,3 @@ class DungeonMaster:
 		text = self.entry2.get()
 		self.entry2.delete(0, END)
 		self.displayText(text, "You", 2)
-
-	def displayText2(self, message, style):
-		if (message == " "):
-			return
-		for i in range(self.numOfLines-2, 0, -1):
-			lineAbove = self.lines2[i-1][1]
-			prevColor = self.lines2[i-1][0].cget('fg')
-			try:
-				# for python 3:
-				prevFont = font.Font(font = self.lines2[i-1][0].cget('font'))
-			except AttributeError:
-				# for python 2:
-				prevFont = font(font = self.lines1[i-1][0].cget('font'))
-			self.lines2[i][1] = lineAbove
-			self.lines2[i][0].config(text = lineAbove, fg = prevColor, font = prevFont)
-		newText = message
-		self.lines2[0][0].config(text = newText, fg = style[0], font = style[1])#'-weight ' + style[1])
-		self.lines2[0][1] = newText
