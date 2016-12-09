@@ -113,10 +113,10 @@ class AI:
 	def life(self, game_state):
 		Life = True
 		Window = game_state.Window()
-		#turnstile for starting game:
-		Window._DungeonMaster__Lock.acquire()
-		Window._DungeonMaster__Lock.release()
 		while Life:
+			#turnstile for starting game:
+			Window._DungeonMaster__Lock.acquire()
+			Window._DungeonMaster__Lock.release()
 			# I am in battle, stop doing actions: (kill thread)
 			if self.kill.is_set():
 				Window.displayText(self.name + " goes to the Dungeon.", "", 2)
