@@ -13,6 +13,7 @@ import GameState
 import sys
 import re
 import time
+from idlelib.WidgetRedirector import WidgetRedirector
 
 try:
     # for Python2
@@ -73,12 +74,14 @@ class DungeonMaster:
 		self.frame2 = Frame(self.canvas2, height = 1350, width = 650, bg = "#d9ff66" )
 		self.canvas2.configure(yscrollcommand = self.scrollBar2.set)
 
-		self.text1 = Text(self.canvas1, wrap = WORD, height = 1350, bg = "#99ff99", font = self.narratorFont)
-		self.text2 = Text(self.canvas2, wrap = WORD, height = 1350, bg = "#d9ff66", font = self.narratorFont)
+		#self.text1 = Text(self.canvas1, wrap = WORD, height = 1350, bg = "#99ff99", font = self.narratorFont)
+		#self.text2 = Text(self.canvas2, wrap = WORD, height = 1350, bg = "#d9ff66", font = self.narratorFont)
+		self.text1 = ReadOnlyText(self.canvas1, wrap = WORD, height = 1350, bg = "#99ff99", font = self.narratorFont)
+		self.text2 = ReadOnlyText(self.canvas2, wrap = WORD, height = 1350, bg = "#d9ff66", font = self.narratorFont)
+
 		self.tags()
 
 		self.__Lock.acquire()
-
 
 
 	def game_screen(self, master):
@@ -121,7 +124,6 @@ class DungeonMaster:
 							i+= 1
 						else:
 							self.shortcuts[char[0].lower()+str(i)] = char
-		print(self.shortcuts)
 
 	def tags(self):
 		for char in self.styles:
@@ -291,3 +293,10 @@ class DungeonMaster:
 		text = self.entry2.get()
 		self.entry2.delete(0, END)
 		self.displayText(text, "You", 2)
+
+class ReadOnlyText(Text):
+	def __init__(self, *args, **kwargs):
+		Text.__init__(self, *args, **kwargs)
+		self.redirector = WidgetRedirector(self)
+		self.insert = self.redirector.register("insert", lambda *args, **kw: "break")
+		self.delete = self.redirector.register("delete", lambda *args, **kw: "break")
