@@ -314,7 +314,7 @@ class Rogue(AI):
 		msg = ExpiringMessage(self.name, (sending[0], self.name), LONGWAIT)
 		PostOffice.send_built_Message(self.name, Victim, msg)
 		msg.clear()
-		
+		self.Event.clear()
 		if msg.read == True:
 			self.InternalEvent.wait()
 			#  get mail from victim
@@ -508,7 +508,7 @@ class Rogue(AI):
 						else:
 							Window.displayText("How dare ye think ye can speak with me!", "Dragon", 2)
 							Window.displayText("Face my spit instead, cretein!", "Dragon", 2)
-							Window.displayText(Who+" spits fire all over the "+self.name+"!", "", 2)
+							Window.displayText(Monster.name+" spits fire all over the "+self.name+"!", "", 2)
 							self.health -= 3
 						self.Event.clear()
 						return

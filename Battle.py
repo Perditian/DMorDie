@@ -98,7 +98,7 @@ class Dragon:
 	# The battle is finished, decide outcome:
 	def finishedBattle(self,GameState):
 		Window = GameState.Window()
-		if self.health < 0:
+		if self.health <= 0:
 			Window.displayText("The dragon is dead. You loot its corpse.", "", 2)
 			Window.displayText("You find 100 gold for everyone!!", "", 2)
 			Window.displayText("There's a note in the dragon's pocket.", "", 2)
@@ -167,6 +167,7 @@ class Battle(object):
 			for fighter in Fighters:
 					all_ready = all_ready and fighter.ready2battle.is_set()
 			if all_ready:
+				print("we are all ready!!")
 				# kill all fighter threads:
 				for fighter in Fighters:
 					fighter.kill.set()
