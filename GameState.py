@@ -1,8 +1,6 @@
 """
  Avita Sharma
  Game State Class
-
-TODO: add Messaging
 """ 
 
 import threading

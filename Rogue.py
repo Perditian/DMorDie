@@ -163,10 +163,14 @@ class Rogue(AI):
 			Window.displayText(Perpetrator+"'s pride is hurt. They lost 1 emotional health.", "", 2)
 			Money_Lost = 0
 			with game_state.Lock():
-				People[Perpetrator].health -= 1
-				People[Perpetrator].health = max(0, People[self.name].health)
-			Window.displayText("", "", 2)
-			Window.displayText("", "", 2)
+				if People[Perpetrator].health == 1:
+					Window.displayText(Perpetrator + " believes in themself, and regains their pride!", "", 2)
+					People[Perpetrator].health += 1
+				else:
+					People[Perpetrator].health -= 1
+					People[Perpetrator].health = max(1, People[self.name].health)
+				Window.displayText("", "", 2)
+				Window.displayText("", "", 2)
 		else:
 			# DM is interacting with this event:
 			# add a penalty to Perpetrator's roll because I noticed:

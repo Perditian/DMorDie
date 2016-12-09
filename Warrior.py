@@ -98,8 +98,12 @@ class Warrior(AI):
 			Window.displayText(Perpetrator+"'s pride is hurt. They lost 1 emotional health.", "", 2)
 			Money_Lost = 0
 			with game_state.Lock():
-				People[Perpetrator].health -= 1
-				People[Perpetrator].health = max(0, People[self.name].health)
+				if People[Perpetrator].health == 1:
+					Window.displayText(Perpetrator + " believes in themself, and regains their pride!", "", 2)
+					People[Perpetrator].health += 1
+				else:
+					People[Perpetrator].health -= 1
+					People[Perpetrator].health = max(1, People[self.name].health)
 				Window.displayText("", "", 2)
 				Window.displayText("", "", 2)
 		else:
@@ -146,7 +150,6 @@ class Warrior(AI):
 		total_health = 0
 		victim = None
 		for (name, person) in People.items():
-		#	Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
 			if name != self.name:
 				total_health += person.health
 				if person.health >= max_health:
@@ -162,13 +165,36 @@ class Warrior(AI):
 		total_health = 0
 		victim = None
 		for (name, place) in Locations.items():
-		#	Window.displayText(name + " has " + str(person.Money) + " zenny", "", 1)
 			if name != self.name:
 				total_health += place.health
 				if person.health >= max_health:
 					max_health = place.health
 					victim = name
 		return (max_health, total_health, victim)
+
+
+	# I kill another fighter:
+	def kill_fighter(self, game_state, Victim):
+		People = game_state.Characters()
+		Window = game_state.Window()
+		PostOffice = game_state.Messages()
+		health_taken = People[Victim].health
+		# message to send to Victim:
+		sending = self.msg_cmds["kill"]
+		msg = ExpiringMessage(self.name, (sending[0], self.name), LONGWAIT)
+		PostOffice.send_built_Message(self.name, Victim, msg)
+		msg.clear()
+		if msg.read == True:
+			self.InternalEvent.wait()
+			#  get mail from victim
+			mail_from = PostOffice.get_Mail_From(Victim, self.name)
+			received = sending[1]
+			for msg in mail_from:
+				if msg.content == (received, rate):
+					return (True, rate, game_state)
+			return (True, None, game_state) # just in case 
+
+		return (False, None, None)
 
 
 	def killpeople(self, game_state, Victim):
@@ -290,6 +316,7 @@ class Warrior(AI):
 			self.drunkeness = max(0, self.drunkeness)
 		return (Money_Earned, game_state)
 
+
 	def drinking_utility(self, game_state):
 		Locations = GameState.Locations()
 		bar = None
@@ -369,23 +396,6 @@ class Warrior(AI):
 					self.money -= 5
 					self.money = max(0, self.money)
 		return
-
-
-	def default_action(self, game_state, N=None):
-		MAX_UTILITY = 10000000
-		People = game_state.Characters()
-		Window = game_state.Window()
-		People[self.name].counter += 1
-		if People[self.name].counter >= 2:
-			Window.displayText(self.name + " went to the dungeon and got eaten by a Troll.", "", 2)
-			exit(0)
-		Window.displayText("Waiting to go to dungeon...", "", 2)
-		game_state.set_Characters(People)
-		return (MAX_UTILITY, game_state)
-
-	def default_utility(self, game_state):
-		MAX_UTILITY = 10000000
-		return (MAX_UTILITY, MAX_UTILITY)
 
 
 	def flirt(self, game_state, Person):
