@@ -31,11 +31,11 @@ class DungeonMaster:
 	#TODO: add Inventory
 	# initializes the Dungeon Master with the given input and output streams
 	def __init__(self, master):
-		self.start_text = Text(master, insertwidth = 0, spacing1 = "45", font = font.Font(font = ("Courier New", 22, "normal")), bg = "#99ff99", relief = "flat", wrap = "word", width = 40, height = 8)
+		self.start_text = Text(master, insertwidth = 0, spacing1 = "45", font = font.Font(font = ("Courier New", 22, "normal")), bg = "#1a0d00", fg = "#ff8000", relief = "flat", wrap = "word", width = 40, height = 8)
 		self.start_text.tag_configure('tag-center', justify = 'center')
 		self.start_text.insert('end', "Hi Dungeon Master, welcome to your new campaign! \nThere are characters for you to interrupt (i). \nYou can also print (p) a list of characters and actions if you forget. \nSpelling counts! \nYou can pause/unpause the game by typing 'pause' or 'unpause'\n", 'tag-center')
 		self.start_text.place(relx = 0.5, rely = 0.4, anchor = CENTER)
-		self.start_button = Button(master, text = "BEGIN", font = font.Font(font = ("Courier New", 14, "bold")), command = lambda: self.game_screen(master), width = 50, height = 4, bg = "#ccccff")		
+		self.start_button = Button(master, text = "BEGIN", font = font.Font(font = ("Courier New", 14, "bold")), command = lambda: self.game_screen(master), width = 50, height = 4, fg = "#1a0500",bg = "#ff704d")		
 		self.start_button.place(relx = 0.5, rely = 0.85, anchor = CENTER)
 
 
@@ -53,31 +53,33 @@ class DungeonMaster:
 		self.shortcuts = {}
 
 		#self.shortcuts = {'r' : 'Rogue', 'a' : "Assasin", 'w' : 'Warrior'}
-		self.styles = {'Rogue': ('#ff5050', self.otherFont, 'r'), 'Assasin': ('#993366', self.otherFont, 'a'), '': ('#000000', self.narratorFont), '<': ('#ff3300', self.otherFont), '>': ('#802b00', self.otherFont), '>>' : ('#ff00ff', self.otherFont), 'You' : ('#0000cc', self.otherFont), '    ' : ('#663300', self.otherFont), 'The Old Man' : ('#808080', self.otherFont), 'Anita Colbier' : ('#00ffcc', self.otherFont)}
+		self.styles = {'Rogue': ('#ff5050', self.otherFont, 'r'), 'Assasin': ('#993366', self.otherFont, 'a'), '': ('#fff2e6', self.narratorFont), '': ('#ff3300', self.otherFont), '>': ('#ffb066', self.otherFont), '<' : ('#ff00ff', self.otherFont), 'You' : ('#e6e6ff', self.otherFont), '    ' : ('#663300', self.otherFont), 'The Old Man' : ('#9999ff', self.otherFont), 'Anita Colbier' : ('#00ffcc', self.otherFont)}
+		self.screen1Color = "#331a00"
+		self.screen2Color = "#330a00"
 
 		#master widgets
 		self.canvas1 = Canvas(master, scrollregion=(0,0,650,1350), borderwidth = 0, width = 650, height = 750, background = "#99ff99")
 		self.scrollBar1 = Scrollbar(master, orient = "vertical", command = self.canvas1.yview)
 
-		self.divider = Frame(master, height = 700, width = 20, bd = 1, 
-			relief = RAISED, padx=5, pady=5, bg = "#ccccff")
+		self.divider = Frame(master, height = 700, width = 20,# bd = 1, 
+			relief = RAISED, padx=5, pady=5, bg = "#ff8400")
 
-		self.canvas2 = Canvas(master, scrollregion=(0,0,650,1350), borderwidth = 0, width = 650, height = 750, background = "#d9ff66")
+		self.canvas2 = Canvas(master, scrollregion=(0,0,650,1350), borderwidth = 0, width = 650, height = 750, background = "#ffe6cc")
 		self.scrollBar2 = Scrollbar(master, orient = "vertical", command = self.canvas2.yview)
 
-		self.entry1 = Entry(master, width = 121, bg = "#ccccff", font = ("Courier New", 12))
-		self.entryButton1 = Button(master, text="submit", width = 15,
-			height = 2, command = self.callback1_2, bg = "#ccccff")
+		self.entry1 = Entry(master, width = 121, bg = "#ffe6cc", font = ("Courier New", 12))
+		self.entryButton1 = Button(master, text="submit", width = 15, font = self.otherFont, fg = "#1a0500",
+					height = 2, command = self.callback1_2, bg = "#ff704d")
 
-		self.frame1 = Frame(self.canvas1, height = 1350, width = 650, bg = "#99ff99" )
+		self.frame1 = Frame(self.canvas1, height = 1350, width = 650, bg = self.screen1Color )
 		self.canvas1.configure(yscrollcommand = self.scrollBar1.set)
-		self.frame2 = Frame(self.canvas2, height = 1350, width = 650, bg = "#d9ff66" )
+		self.frame2 = Frame(self.canvas2, height = 1350, width = 650, bg = self.screen2Color )
 		self.canvas2.configure(yscrollcommand = self.scrollBar2.set)
 
 		#self.text1 = Text(self.canvas1, wrap = WORD, height = 1350, bg = "#99ff99", font = self.narratorFont)
 		#self.text2 = Text(self.canvas2, wrap = WORD, height = 1350, bg = "#d9ff66", font = self.narratorFont)
-		self.text1 = ReadOnlyText(self.canvas1, wrap = WORD, height = 1350, bg = "#99ff99", font = self.narratorFont)
-		self.text2 = ReadOnlyText(self.canvas2, wrap = WORD, height = 1350, bg = "#d9ff66", font = self.narratorFont)
+		self.text1 = ReadOnlyText(self.canvas1, wrap = WORD, padx = 10, height = 1350, bg = self.screen1Color, font = self.narratorFont, fg = '#fff2e6')
+		self.text2 = ReadOnlyText(self.canvas2, wrap = WORD, padx =10, height = 1350, bg = self.screen2Color, font = self.narratorFont, fg = '#fff2e6')
 
 		self.tags()
 

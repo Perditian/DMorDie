@@ -123,7 +123,7 @@ def main():
 	# create the main window:
 	window = Tk()
 	window.geometry("1328x755")
-	window.config(bg = "#99ff99")
+	window.config(bg = "#1a0d00")
 	DM = DungeonMaster(window)
 
 	boxes = PostOffice()

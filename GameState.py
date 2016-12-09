@@ -26,8 +26,8 @@ class GameState(object):
 		self.__Lock       = threading.RLock()
 #		self.__Lock2      = threading.RLock()
 
-#	def Lock(self):
-#		return self.__Lock2
+	def Lock(self):
+		return self.__Lock
 
 	def Messages(self):
 		with self.__Lock:
