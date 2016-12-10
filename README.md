@@ -10,6 +10,14 @@ Linux: ./DMorDie
 
 Windows: python3 DMorDie.py
 
+
+How To Play:
+type i Name to interrupt a Character when they try to do something.
+
+
+Github address:
+https://github.com/Perditian/DMorDie
+
 # Code Overview:
 |File Name		|Description									 |
 |-----------------------|:------------------------------------------------------------------------------:|
