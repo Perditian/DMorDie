@@ -9,7 +9,7 @@
 from AI import AI 
 from Action import Action
 from Rogue import Rogue
-# from Warrior import Warrior
+from Warrior import Warrior
 import threading
 import random
 from DungeonMaster import DungeonMaster
@@ -45,8 +45,8 @@ def main():
 	# Make the Playable Characters:
 	rogue = Rogue(0, Home = Village)
 	rogue1 = Rogue(1, 'Assassin', Village)
-	#warrior = Warrior(0, Location = Village)
-	#warrior1 = Warrior(1, Location = Village, Name = "Paladin")
+	warrior = Warrior(0, Home = Village)
+	warrior1 = Warrior(1, Home = Village, name = "Knight")
 
 	# create the main window:
 	window = Tk()
@@ -56,11 +56,12 @@ def main():
 
 	# build the post office:
 	boxes = PostOffice()
-	for name in [rogue.name, rogue1.name]:
+	for name in [rogue.name, rogue1.name, warrior.name, warrior1.name]:
 		boxes.add_Name(name)
 
 	# Wrap the above in the Game State:
-	game_state = GameState(boxes, {rogue.name:rogue, rogue1.name:rogue1, 
+	game_state = GameState(boxes, {rogue.name:rogue, rogue1.name:rogue1,
+								   warrior.name:warrior, warrior1.name:warrior1, 
 		                           OldMan.name:OldMan, barkeep.name:barkeep},
 		         {Tavern.name:Tavern, Village.name:Village}, DM)
 
@@ -73,13 +74,18 @@ def main():
 	# create Playable Character threads:
 	Rogue_thread = threading.Thread(target=rogue.life, args=(game_state,))
 	Rogue_thread1 = threading.Thread(target=rogue1.life, args=(game_state,))
+	Warr_thread = threading.Thread(target=warrior.life, args=(game_state,))
+	Warr_thread1 = threading.Thread(target=warrior1.life, args=(game_state,))
 	Rogue_thread.start()
 	Rogue_thread1.start()
+	Warr_thread.start()
+	Warr_thread1.start()
 
 	# create the Battle thread:
 	battle = Battle()
 	Battle_thread = threading.Thread(target=battle.life, args=(dagon,
-		            [Rogue_thread, Rogue_thread1], game_state))
+		            [Rogue_thread, Rogue_thread1, Warr_thread, Warr_thread1],
+		            game_state))
 	Battle_thread.start()
 
 	# Start the game!

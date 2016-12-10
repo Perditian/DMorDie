@@ -61,6 +61,145 @@ class Rogue(AI):
 				return True
 		return False
 
+	# someone is flirting with me:
+	def flirt_me(self, game_state, Flirtername):
+		self.Event.clear()
+		# If I know about the monster, share that information:
+		People = game_state.Characters()
+		Window = game_state.Window()
+		PostOffice = game_state.Messages()
+		Flirter = People[Flirtername]
+		if self.ready2battle.is_set():
+			Window.displayText("Yo, I heard there's a dragon."\
+				               " Help me slay it!", self.name, 2)
+			Window.displayText("Ok. But I also slayed an Ogre once.",
+								 Flirtername, 2)
+			Window.displayText("Man, I don't care, you doin' this or what?",
+								self.name, 2)
+			Window.displayText("Urgh, fine. I'll bombard you with my "\
+							   "heroic feats later.", Flirtername)
+			game_state.withLock(lambda:Flirter.ready2battle.set())
+		# otherwise, tell them to go away:
+		else:
+			Window.displayText("You know, I slayed an Ogre once.", 
+								Flirtername, 2)
+			Window.displayText("Man, don't disturb me.", self.name, 2)
+
+		# message to send to Flirter:
+		sending = self.msg_cmds["flirt"]
+		msg = ExpiringMessage(self.name, (sending[1]), LONGWAIT)
+		PostOffice.send_built_Message(self.name, Flirtername, msg)
+		# set the Asker's internal event to signal we sent them a message:
+		game_state.withLock(lambda:Flirter.InternalEvent.set())
+		return
+
+	# someone is killing me!
+	def kill_me(self, game_state, Perpname):
+		People = game_state.Characters()
+		Window = game_state.Window()
+		PostOffice = game_state.Messages()
+		Perpetrator = People[Perpname]
+		health_taken = 0
+		if Perpetrator.Alignment is 'chaotic':
+			Window.displayText("Hey! "+ self.name +"! You lookin' at me "\
+				               "funny?", Perpname, 2)
+			Window.displayText("Uh...no? Maybe? Whats it to ya if I did?",
+			                   Perpname, 2)
+			Window.displayText("I don't take too kindly to rude folk. "\
+							   "In fact, I think it's a public service if I "\
+							   "eliminated all of them.", Perpname, 2)
+		else:			
+			Window.displayText(Perpname+", your village called. They want "\
+							   "their idiot back", self.name, 2)
+			Window.displayText(self.name+ ", you've insulted me! I must duel "\
+							   "to regain my honor!", Perpname, 2)
+		if Perpetrator.drunkeness >= 10:
+				Window.displayText("Yo, you're drunk, you need to calm down.", 
+								   self.name, 2)
+				Window.displayText("I'm not drunk *hic*, YOU'RE drunk! "\
+								   "Enough talk, fight me!", Perpname, 2)
+		if Perpetrator.zombie:
+			Window.displayText("Dude, you stink and your face is fallin off",
+							   self.name, 2)
+			Window.displayText("ITS CAUSE IMMA ZOMBAE GHHHRRRR", Perpname, 2)
+
+		Window.displayText("The " + Perpname + " wants to attack " + self.name,
+						   ">", 1)
+		if Perpetrator.Event.wait(SHORTWAIT) is False:
+			Perpetrator.Event.clear()
+			Attacker = Perpname
+			Victim = self.name
+			if Perpetrator.drunkeness >= 10:
+				Window.displayText(Attacker + " swings their fist at "+\
+								   Victim+", but hits themself instead!", 
+								   "", 2)
+				Window.displayText("Ohhggrr...These stars are pretty pretty"\
+								   " *hic* things.", Attacker, 2)
+			else:
+				Window.displayText("The " + Attacker + " swings their axe at "\
+								   + Victim + ", but ends up hitting themself"\
+								   " instead.", "", 2)
+			Window.displayText("Ha! Why you be hittin yourself?", Victim, 2)
+			Window.displayText(Attacker +" lost 5 health.", "<", 1)
+			def lost():
+				Perpetrator.health -= 5
+				Perpetrator.zombified()
+			game_state.withLock(lost)
+			Window.displayText("", "", 2)
+			Window.displayText("", "", 2)
+			health_taken = 5
+		else:
+			# simple d20 - hit roll, penalized since I noticed:
+			roll = random.randint(0, 20) - self.anger 
+			prompt = Perpname + " rolled a " + str(roll)+", do they succeed?"
+			cmd = self.success_or_fail(Window, prompt)
+			if cmd:
+				# simple d12 - hit roll
+				roll = random.randint(0, 12) + Perpetrator.anger 
+				def hit():
+					self.health -= roll
+					self.health = max(1, People[Victim].health)
+				game_state.withLock(hit)
+				if Perpetrator.zombie:
+					Window.displayText("The undead " + Attacker + \
+						               "lunges out and bites "+ Victim+\
+						               ", dealing "+str(roll)+" damage!!",
+						               "", 2)
+				elif Perpetrator.drunkeness >= 10:
+					Window.displayText(Attacker+" spazes towards "+Victim+\
+						               ", seems to lunge sideways, but kicks "\
+						               "upwards, sending "+Victim+" flying!!",
+						               "", 2)
+				else:
+					Window.displayText("The " + Attacker + " swings their "\
+						               "axe at " + Victim + " and deals " +\
+						               str(roll) + " damage!!", "", 2)
+				health_taken = roll
+			else:
+				Window.displayText("The " + Attacker + " swings their "\
+					               "axe and misses!!", "", 2)
+			Window.displayText("", "", 2)
+			Window.displayText("", "", 2)
+		def end_fight():
+			Perpetrator.Event.clear()
+			Perpetrator.drunkeness -= 1
+			Perpetrator.drunkeness = max(0, self.drunkeness)
+		game_state.withLock(end_fight)
+
+		"""
+		WE NEED 2 SEND THE VICTIM A MESSAGE: 
+		("You tried to kill me", HEALTH_LOST)
+		"""
+		# message to send to Victim:
+		sending = self.msg_cmds["kill"]
+		msg = ExpiringMessage(self.name, (sending[1], health_taken), LONGWAIT)
+		PostOffice.send_built_Message(self.name, Perpname, msg)
+		# set the Perpetrator's internal event to signal 
+		# we sent them a message:
+		game_state.withLock(lambda:Perpetrator.InternalEvent.set())
+		return (health_taken, game_state)
+
+
 	# determines the maximum utility gained from pickpocketing one person,
 	# returns the max utility, the total utility, and the best victim
 	# for pickpocketing:
@@ -108,9 +247,10 @@ class Rogue(AI):
 				               " attempted to pickpocket " + Victim, "<", 2)
 			Window.displayText("And failed miserably. They lost 10gp.", 
 				               "<", 2)
-			with game_state._GameState__Lock:
+			def pickfail():
 				People[self.name].Money -= 10
 				People[self.name].Money = max(0, People[self.name].Money)
+			game_state.withLock(pickfail)
 			Window.displayText("The " + self.name + " now has " +\
 			                   str(People[self.name].Money) + " zenny", "<", 1)
 			Window.displayText("", "", 2)
@@ -122,10 +262,11 @@ class Rogue(AI):
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
 				# I succeeded, now I pickpocket the Victim for all their money:
-				with game_state._GameState__Lock:
+				def picksucc():
 					Money_Earned = People[Victim].Money
 					People[self.name].Money += Money_Earned
 					People[Victim].Money = 0
+				game_state.withLock(picksucc)
 				Window.displayText("The " + self.name + \
 					               " pickpocketed " + Victim + " for " +\
 					               str(Money_Earned) + " zenny!!", "<", 2)
@@ -180,7 +321,7 @@ class Rogue(AI):
 			Window.displayText(Perpetrator+"'s pride is hurt. "\
 				               "They lost 1 emotional health.", "<", 2)
 			Money_Lost = 0
-			with game_state.Lock():
+			def pickhealth():
 				if People[Perpetrator].health == 1:
 					Window.displayText(Perpetrator + " believes in themself, "\
 						               "and regains their pride!", "<", 2)
@@ -191,6 +332,7 @@ class Rogue(AI):
 					                           max(1, People[self.name].health)
 				Window.displayText("", "", 2)
 				Window.displayText("", "", 2)
+			game_state.withLock(pickhealth)
 		else:
 			# DM is interacting with this event:
 			# add a penalty to Perpetrator's roll because I noticed:
@@ -203,9 +345,10 @@ class Rogue(AI):
 			cmd = self.success_or_fail(Window, prompt)
 			# DM decided that the Perpetrator succeeded:
 			if cmd:
-				with game_state._GameState__Lock:
+				def picksucc():
 					People[Perpetrator].Money += Money_Lost
 					self.Money = 0
+				game_state.withLock(picksucc)
 				Window.displayText("The " + Perpetrator +\
 				                   " pickpocketed " + self.name + \
 				                   " for " + str(Money_Lost) + \
@@ -221,7 +364,7 @@ class Rogue(AI):
 				Window.displayText("", "", 2)
 				Window.displayText("", "", 1)
 		# clear Perpetrator's event, so the DM can interact with them again:
-		People[Perpetrator].Event.clear()
+		game_state.withLock(lambda:People[Perpetrator].Event.clear())
 
 		"""
 		WE NEED 2 SEND THE VICTIM A MESSAGE: 
@@ -233,7 +376,7 @@ class Rogue(AI):
 		PostOffice.send_built_Message(self.name, Perpetrator, msg)
 		# set the Perpetrator's internal event to 
 		# signal we sent them a message:
-		People[Perpetrator].InternalEvent.set()
+		game_state.withLock(lambda:People[Perpetrator].InternalEvent.set())
 		return
 
 
@@ -247,11 +390,10 @@ class Rogue(AI):
 			               " sneaks up to " + Victim, "", 2)
 		Window.displayText("The "+self.name +\
 			               " wants to steal from " + Victim, "", 1)
-
+		Money_Earned = 0
 		# wait for the DM to interact with this event:
 		if self.Event.wait(SHORTWAIT) is False:
 			# DM did not interact, do something horrible:
-			Money_Earned = 0
 			Window.displayText("Oh no! The " + self.name + \
 				               " got caught stealing :(", "<", 2)
 			Window.displayText(self.name + " had to pay " +\
@@ -266,10 +408,11 @@ class Rogue(AI):
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
 				# I succeeded! Steal all their gold
-				with game_state._GameState__Lock:
-					Money_Earned = Places[Victim].Money
+				Money_Earned = Places[Victim].Money
+				def steal_succ():
 					People[self.name].Money += Money_Earned
 					Places[Victim].Money = 0
+				game_state.withLock(steal_succ)
 				Window.displayText("The "+self.name+" stole from " +\
 				                   Victim + " for " + str(Money_Earned) +\
 				                   " zenny!!", "<", 2)
@@ -331,8 +474,7 @@ class Rogue(AI):
 			Window.displayText("Yo, I heard there's a dragon."\
 				               " Help me slay it!", self.name, 2)
 			Window.displayText("Ok.", Asker.name, 2)
-			with game_state.Lock():
-				Asker.ready2battle.set()
+			game_state.withLock(lambda:Asker.ready2battle.set())
 		# otherwise, tell them to go away:
 		else:
 			Window.displayText("Man, don't disturb me.", self.name, 2)
@@ -342,8 +484,7 @@ class Rogue(AI):
 		msg = ExpiringMessage(self.name, (sending[1]), LONGWAIT)
 		PostOffice.send_built_Message(self.name, Asker.name, msg)
 		# set the Asker's internal event to signal we sent them a message:
-		with game_state.Lock():
-			Asker.InternalEvent.set()
+		game_state.withLock(lambda:Asker.InternalEvent.set())
 		return
 
 	# I ask another fighter:
@@ -368,7 +509,6 @@ class Rogue(AI):
 			return (True, game_state) # just in case 
 
 		return (False, None)
-
 
 	# ask a person for money, depending on dialogue options, I can learn
 	# information about a monster, and get ready to battle.
@@ -469,7 +609,7 @@ class Rogue(AI):
 					Window.displayText(Monster.name+" bites their lip in "\
 						               "disgust; their teeth pierce their "\
 						               "skin and draw blood.", "", 2)
-					with game_state._GameState__Lock:
+					with game_state.Lock():
 						self.Money += 10
 					with Monster.Lock():
 						Monster.health -= 10

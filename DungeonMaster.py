@@ -38,8 +38,8 @@ class DungeonMaster:
 
 		#opening text
 		startText = ("Hi Dungeon Master, welcome to your new campaign! \nThere" 
-			"are characters for you to interrupt (i). \nYou can also print (p)" 
-			"a list of characters and actions if you forget. \n Spelling "
+			" are characters for you to interrupt (i). \nYou can also print (p)" 
+			" a list of characters and actions if you forget. \n Spelling "
 			"counts! \nYou can pause/unpause the game by typing 'pause' "
 			"or 'unpause'\n")
 		self.start_text.insert('end', startText, 'tag-center')
@@ -79,7 +79,9 @@ class DungeonMaster:
 			'You' : ('#e6e6ff', self.otherFont), 
 			'    ' : ('#663300', self.otherFont), 
 			'The Old Man' : ('#9999ff', self.otherFont), 
-			'Anita Colbier' : ('#00ffcc', self.otherFont)}
+			"Anita Colbier" : ('#ffa64d', self.otherFont),
+			'Barbarian': ("#D0A9F5", self.otherFont, 'b'),
+			'Knight': ("#F3E2A9", self.otherFont, 'k')}
 		self.screen1Color = "#331a00"
 		self.screen2Color = "#330a00"
 

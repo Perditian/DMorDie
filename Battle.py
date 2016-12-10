@@ -28,8 +28,8 @@ class Dragon:
 		self.health = health
 		self.fly_away = 0
 		self.__lock = threading.Lock()
-		self.flirted = False
-
+		self.flirted = None
+		self.wrapped = False
 
 	def Lock(self):
 		return self.__lock
@@ -41,6 +41,13 @@ class Dragon:
 		#turnstile for starting game:
 		Window._DungeonMaster__Lock.acquire()
 		Window._DungeonMaster__Lock.release()
+
+		if self.wrapped:
+			Window.displayText("Unleash me cretin! ROAAAAAARRGH!!", 
+								self.name, 2)
+			Window.displayText("The "+self.name+" breaks free of the grapple!",
+							   "", 2)
+			self.wrapped = False
 
 		prompt = "What should the dragon do?"
 		dic = {"0":"attack!", "1":"Fly away"}
@@ -142,6 +149,25 @@ class Dragon:
 			Window.displayText("It reads: 'The Dragon is "\
 				               "now in another castle.'",">>", 2)
 			Window.displayText("          'Ha! Losers. ~ Old Man'", ">>", 2)
+			Window.displayText("", "", 1)
+			Window.displayText("", "", 1)
+			Window.displayText("", "", 1)
+			Window.displayText("", "", 1)
+			Window.displayText("", "", 1)
+
+		elif self.flirted:
+			Window.displayText("I always knew you'd understand me. "\
+								+self.flirted+", fly away "\
+							"with me--leave this miserable place behind, "\
+							"and lets conquer the galaxy together!", 
+							self.name, 2)
+			Window.displayText("I'd like that a lot, Old Man.", self.flirted, 2)
+			Window.displayText("The "+self.name+"'s eyes twinkle in happiness"\
+							   " at being recognized and accepted.", ">>", 2)
+			Window.displayText(self.name+" picks up "+self.flirted+", and "\
+							  "they sail through the sky.", ">>", 2)
+			Window.displayText("Who knows what adventures await them next?", 
+								">>", 2)
 			Window.displayText("", "", 1)
 			Window.displayText("", "", 1)
 			Window.displayText("", "", 1)

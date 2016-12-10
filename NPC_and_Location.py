@@ -79,8 +79,7 @@ class NPC (AI):
 							for (speaker, dialogue) in extended0:
 								Window.displayText(dialogue, speaker, 2)
 							# Asker is ready for battle!
-							with game_state.Lock():
-								Asker.ready2battle.set()
+							game_state.withLock(lambda:Asker.ready2battle.set())
 						else:
 							Window.displayText("You know what? You're too "\
 								               "shady. I don't deal with "\

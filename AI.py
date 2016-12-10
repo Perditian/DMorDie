@@ -103,8 +103,8 @@ class AI:
 					self.ask_me(game_state, args)
 				elif text is (self.msg_cmds["kill"])[0]:
 					self.kill_me(game_state, args)
-		#		elif text is (self.msg_cmds["flirt"])[0]:
-		#			self.flirt_me(game_state, args)
+				elif text is (self.msg_cmds["flirt"])[0]:
+					self.flirt_me(game_state, args)
 			return
 		
 	# basic loop for the AI to follow, runs forever.
