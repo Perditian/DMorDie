@@ -1,4 +1,5 @@
 """
+Avita Sharma, Eric Wyss, Davis Taus
 Rogue Class, extends AI
 
 Rogues can:

@@ -1,5 +1,5 @@
 """
- Avita Sharma
+ Avita Sharma, Eric Wyss, Davis Taus
  Game State Class
  A Collection of Shared Memory between the AI, GUI, and Battles.
 """ 
