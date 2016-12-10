@@ -1,0 +1,303 @@
+\documentclass{article}
+\usepackage{avitaawesome}
+\usepackage{mathrsfs}
+\usepackage[retainorgcmds]{IEEEtrantools}
+\usepackage[margin=1in]{geometry}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{ragged2e}
+\usepackage{indentfirst}
+\usepackage{forest}
+\usepackage{xcolor}
+\newcommand\ytl[2]{
+\parbox[b]{8em}{\hfill{\color{cyan}\bfseries\sffamily #1}~$\cdots\cdots$~}\makebox[0pt][c]{$\bullet$}\vrule\quad \parbox[c]{4.5cm}{\vspace{7pt}\color{red!40!black!80}\raggedright\sffamily #2.\\[7pt]}\\[-3pt]}
+
+%\DeclareMathSizes{10}{10}{10}{10}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% End setting up basic program parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Begin setting up theorems, definitions, etc.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+
+\theoremstyle{definition}
+
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{problem}[theorem]{Problem}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% End setting up theorems, definitions, etc.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\author{Avita Sharma, Eric Wyss, and David Taus}
+\title{\textbf{Final Report}}
+\date{}
+
+\begin{document}
+\maketitle
+\section*{Team Name: DragonSlayers}
+\section*{Group Members:}
+ Avita Sharma, Eric Wyss, and David Taus
+\section*{Project: DM or Die}
+
+A text based adventure game, where the user controls the dungeon master. They can 
+manipulate intelligent `player characters' who interact in the game. Example: the
+user can decide if a player succeeds or fails at a task. These players are 
+concurrent processes which make demands on the dungeon master. These demands
+must be answered in real time or a default behavior is triggered, the default
+generally having a negative consequence. Multiple demands can come from each 
+`player character' at the same time, and the user must decide which one to interact 
+with (or if they are quick, try to do them all). The user can directly control
+monsters and non-playable characters (NPCs) for the `player characters' to interact 
+with.
+\section*{\huge{Outcome:}}
+\section*{Minimum deliverable:}
+\begin{enumerate}
+\item [*X*] Split Screen graphical interface.
+\item [*X*] Two `Player Characters' with a set alignment and class.
+\item [*X*] One Encounter involving talking to one NPC and one battle. 
+\item [*X*] The default map has a dungeon and tavern.
+\item [*X*] Ability to pause the game.
+\item [*X*] Default/unchangeable inventory.
+\end{enumerate}
+\section*{Maximum deliverable:}
+\begin{enumerate}
+\item [* *] Implement up to six characters.
+\begin{enumerate}
+\item [\rightarrow] Implemented four different kinds of playable characters.
+\end{enumerate}
+\item [* *] More classes, more monsters.
+\item [* *] Ability to add more places and characters to the map.
+\item [*X*] Add more encounters. Increase the complexity of encounters.
+\item [* *] Basic Excitement meter for each `player character'. The game is scored
+		  on total excitement. Excitement is
+		  a metric for how much fun the `player characters' are having with the
+		  user's decisions. (i.e. not purposely failing the battle.) Excitement $\in \RR$.
+\item [* *] More user customizable options for the campaign.
+\item [* *] Option to save the game.
+\end{enumerate}
+
+We achieved our minimal deliverable. However, we decided to refine our program
+instead of adding more features to match our maximum deliverable. So our encounters
+with the characters are longer and more complex, but we only have two NPCs, 
+up to four different playable characters, and one monster battle.
+
+
+\section*{\huge{Challenges and Bug Report:}}
+
+Definitely, testing was a big challenge as the playable characters decide to
+do their own actions, so we had to keep playing our game until the specific
+sequence of events that we wanted to test happened. Before we had the game
+state monitor, most bugs from the playable characters occured because an Event 
+was not cleared or set properly. In the future, we could make scripts which
+run a different thread function and force the Playable Characters to do 
+certain functions. \\
+
+Basically, the biggest challenges with the post office were testing. 
+On its face the system was fairly straight forward but making sure that it 
+was going to work as intended was problematic. Also I tried to minimize all 
+function calls because of the GIL. So I wanted to offload work onto AI for 
+interpreting and responding. \\
+
+Another challenge was making sure objects would have an expiration without 
+potentially having to run into references to objects that were already deleted 
+so just deleting them could be problematic which was why instead opted for the 
+validity field. \\
+
+Tkinter's documentation was somewhat dated and inconsistent for some widgets.\\
+
+Initially the screen was setup using multiple message widgets which each displayed a line of output and transferred text between them because the textbox widget wasn't behaving properly with scrollbars and spacing. At first it worked fine but eventually as the game got bigger and more complex it made the gui unbearably slow so we had to reconstruct the layout and make it work for a single widget.\\
+
+It was a little tricky making it so after you interrupt a character the next input addresses only that character and doesn't perform other actions because we had to unbind and rebind events to different widgets and functions\\
+\section*{\huge{Design Reflection:}}
+
+Making the Game State class, which is a collection of all the shared memory of the
+Playable Characters, GUI, and Battle threads, a Monitor ensured that no race conditions
+or contradictions occur when we change the Game State. \\
+
+Having the Post Office asynchronously send messages to other Playable Characters
+that expire models real life, and allows for `synchonous' messaging without
+deadlocks. A playable character can send an expiring message and wait to see if
+it has been read with a timeout. If it does not get read in time, the message
+expires and can no longer be interacted with. If it does get read, then the sender
+stops waiting immediately.  \\
+
+Integrating the Dungeon Master and GUI class definitely improved the 
+functionality of our program. The Dungeon Master essentially parses commands from
+the GUI and sends those commands to the GUI or Playable character to complete.\\
+
+Next time, I think we can generalize more functions, especially the action
+functions a playable character can do. Also, use more functional programming to
+optimize the code. (Using more first-order functions.) Also use more global
+constants! \\
+
+We have hard-coded the dialogue into the program, but if we make a more extensive
+dialogue system, we should try to implement it in XML or JSON, and have our
+program parse dialogue from these files instead. \\
+
+\section*{Class Diagrams}
+\textbf{Character Class Hiearchy:} \\
+\begin{forest}
+  for tree={
+    fit=band,% spaces the tree out a little to avoid collisions
+  }
+  [Actors
+  [Monsters]
+  [Places]
+  [AI
+  [Actions - Field]
+    [Playable Characters
+      [Rogue]
+      [Warrior]
+      [Mage]
+      [Bard]
+     ]
+     [Non Playable Characters (NPCS)
+     	[Dialogue Scripts - Hard-coded in functions]
+     ]
+    ]
+    ]
+\end{forest} \\ \\
+\textbf{Dungeon Master:} \\ \\
+\begin{forest}
+  for tree={
+    fit=band,% spaces the tree out a little to avoid collisions
+     style={
+        draw=black,
+        text height=1.5ex,
+        text depth=.25ex,
+        rounded corners,
+    }
+  }
+  [GUI window class - integrates the GUI and the Dungeon Master
+  	[User Input/Output]
+    [GUI Interface]
+    [Game State -field]
+  ]
+\end{forest} \\ \\
+\textbf{Messaging:} \\ \\
+\begin{forest}
+  for tree={
+    fit=band,% spaces the tree out a little to avoid collisions
+     style={
+        draw=black,
+        text height=1.5ex,
+        text depth=.25ex,
+        rounded corners,
+    }
+  }
+  [Post Office
+  	[Expiring Message Queue - Field]
+  ]
+\end{forest} \\ \\
+\textbf{Game State:} \\ \\
+\begin{forest}
+  for tree={
+    fit=band,% spaces the tree out a little to avoid collisions
+     style={
+        draw=black,
+        text height=1.5ex,
+        text depth=.25ex,
+        rounded corners,
+    }
+  }
+  [Game State
+    [Dictionary of Actors and Post Office and Window/DM]
+  ]
+  \end{forest} \\ \\ 
+
+\textbf{Battle:} \\ \\
+\begin{forest}
+  for tree={
+    fit=band,% spaces the tree out a little to avoid collisions
+     style={
+        draw=black,
+        text height=1.5ex,
+        text depth=.25ex,
+        rounded corners,
+    }
+  }
+  [Battle Script
+    [Monster - Field]
+    [Game State - Field]
+  ]
+  \end{forest} \\ \\ 
+
+  The Game State will be a tuple containing a dictionary of all the AI and
+  Places in the Game (keys are the name or ID of the Actor, values are the Actor), The Message Queue, the Window (GUI) and the Game Lock. The Game State is a Monitor Class to ensure that clients use the lock when accessing or
+  modifying the Game State. It will include a function that takes a function and
+  calls it using the Game State's lock. The Game State will be passed to all Actors on the Board and the Dungeon Master. \\
+
+  AI are goal-based agents who use utility to decide actions. The current Goal
+  is selected using a transition matrix (Markov Chain). For the current Goal,
+  the action with the maximum expected utility is chosen, and the Actor attempts
+  to perform the action. If a contradiction arises, the Actor chooses a new Goal
+  (it can be the same one). Otherwise, the Actor compares the utility gained (or lost) to their expected utility. If they succeeded, their probability of success of
+  performing that action increases. If they failed, their probability of success of
+  that action decreases. This ensures that the AI is more likely to continue to do
+  the action if they perform successfully, and less likely to do it if they fail.
+
+  The Battle class is a thread that checks each playable character and determines
+  if they are all prepared to go to battle. If everyone is prepared, it signals
+  to the playable character threads to kill themselves, and then sends the Game
+  State to battle. There, it creates attack threads for each playable character
+  during their turn, and joins them when their attacks have completed. Once the
+  battle is completed, the game ends.
+
+\section*{UML Diagrams} \\  \\
+\includegraphics[width = 6in]{"begin_game"}\\ \\
+This figure displays the game start screen. Here, the Playable Character threads
+have already started, but are paused (waiting) until the user clicks the begin
+button. Then, the threads acquire the GUI lock and release it for others to use
+like a turnstile. \\
+\includegraphics[width = 6.5in]{"in_game"} 
+\\ \\
+This figure details an instance of the game running. Here, the Rogue and Assassin
+are the only Playable Characters, and they interact with each other and with 
+an NPC, the Old Man. The Dungeon Master determines if an action from the Rogue
+or Assassin succeeds or fails. They also can choose how an NPC responds to the
+Playable Characters. Here, the Rogue talks to the Old Man. The Dungeon Master
+choose to let Old Man tell the Rogue about a Dragon that needs to be battled.
+Meanwhile, The Assassin wants to pickpocket the Old man. They wait for the 
+Dungeon Master to interact with them. Since the Dungeon Master is quick, they
+are able to interact with the Assassin and chose to let the Assassin succeed
+at pickpocketing the Old Man. The game is then paused.
+
+\section*{\huge{Division of Labor}}
+The project was able to be broken down to allow for members to work independently.
+Integrating each component took some collaboration, but for the most part we were
+able to independently and simutaneously update our code and run the program without 
+any drastic conflicts.
+
+\section*{\huge{Code Overview:}}
+\begin{tabular}{ll}
+File Name & Description \\
+\hline \\
+$AI.py$ & Generalizes how each Playable Character functions. \\
+& Includes common fields for all characters. (AI class)\\ \\
+$Action.py$ & Maps the action to its utility, updates the action based on performance. \\ \\
+$Battle.py$ & Includes the Monster and Battle Class.  \\ \\
+$DMorDie.py$ & Main Program, run to play game. Initializes and runs the game. \\ \\
+$DungeonMaster.py$ & The GUI class. Creates and updates the GUI. \\ \\
+$GameState.py$ & The Game State class. A collection of shared memory under a monitor. \\ \\
+$NPC\_and\_Location.py$ & The NPC and Location classes. NPC extends AI. \\ \\
+$Rogue.py$ & The Rogue Class. A Playable Character, includes the actions to send \\
+&            to the AI class, and an Attack function for the Battle. \\ \\
+$Warrior.py$ & The Warrior Class. A Playable Character, includes the actions to send \\
+&            to the AI class, and an Attack function for the Battle. \\ \\
+$expiringObject.py$ & Includes the expring messages to send with the Post Office. \\ \\
+$postOffice.py$ & Handles messaging between Playable Characters. Messages are expiring messages.\\ \\
+\end{tabular}
+\end{document}
