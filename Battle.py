@@ -24,6 +24,7 @@ class Dragon:
 		self.health = health
 		self.fly_away = 0
 		self.__lock = threading.Lock()
+		self.flirted = False
 
 
 	def Lock(self):

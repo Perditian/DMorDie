@@ -8,7 +8,7 @@ from Action import Action
 import threading
 import random
 from DungeonMaster import DungeonMaster
-from GameState import GameState
+from GameState import *
 import sys
 from math import ceil
 import time
@@ -672,24 +672,38 @@ class Warrior(AI):
 		#turnstile for starting game:
 			Window._DungeonMaster__Lock.acquire()
 			Window._DungeonMaster__Lock.release()
+
 		if self.health < 5:
 			Window.displayText(self.name + " is breathing heavily; their face is scrunched up, blood drenching their clothes.", "", 2)
 
 		if self.zombie:
-
-
-
+			# Shambles up to the Dragon -- skips first turn
+			# Can grab the dragon - test -, making it vunerable to attacks (do more damage)
+			# Dragon has a chance to break from grapple, sends the zombie 
+			# flying, must then shamble back up again.
 
 		elif self.drunkeness >= 5:
+			# Can be a master of drunken kung fu -- do one powerful attack with
+			# advantage.
 
-
-
+			# drunkeness decreases by one.
 		else:
-			if self.Alignment is "chaotic":
-				# Rage & attack twice
-			else:
-				# Flirt with dragon -- bonus if flirted with old man
+			if random.random() <= 0.5:
+				# Rage & attack twice == roll once, if success, attack 
+				# once with modifier, once without.
 
+				# fails, nothing happens.
+			else:
+				Window.displayText("FLIRTS")
+				roll = random.randint(0, 20) + self.flirter # simple d20 - persuasion
+				if "The Old Man" in self.flirted_with:
+					"Go to flirted with dragon ending."
+				else:
+					Window.displayText("Oh, what large teeth you have!", self.name, 2)
+
+					# try a one liner, if it succeeds, the dragon
+					# is charmed, vunerable to attack for one attack
+					# if fails, we get hurt
 		return 
 
 

@@ -53,7 +53,7 @@ class DungeonMaster:
 		self.shortcuts = {}
 
 		#self.shortcuts = {'r' : 'Rogue', 'a' : "Assasin", 'w' : 'Warrior'}
-		self.styles = {'Rogue': ('#ff5050', self.otherFont, 'r'), 'Assasin': ('#993366', self.otherFont, 'a'), '': ('#fff2e6', self.narratorFont), '': ('#ff3300', self.otherFont), '>': ('#ffb066', self.otherFont), '<' : ('#ff00ff', self.otherFont), 'You' : ('#e6e6ff', self.otherFont), '    ' : ('#663300', self.otherFont), 'The Old Man' : ('#9999ff', self.otherFont), 'Anita Colbier' : ('#00ffcc', self.otherFont)}
+		self.styles = {'Rogue': ('#ff5050', self.otherFont, 'r'), 'Assasin': ('#66a3ff', self.otherFont, 'a'), '': ('#fff2e6', self.narratorFont), '': ('#ff3300', self.otherFont), '>': ('#ffb066', self.otherFont), '<' : ('#ff00ff', self.otherFont), 'You' : ('#e6e6ff', self.otherFont), '    ' : ('#663300', self.otherFont), 'The Old Man' : ('#9999ff', self.otherFont), 'Anita Colbier' : ('#00ffcc', self.otherFont)}
 		self.screen1Color = "#331a00"
 		self.screen2Color = "#330a00"
 
@@ -155,7 +155,7 @@ class DungeonMaster:
 		return (None, None)
 
 	# interrupts the given Character
-	# NOTE: interrupts should be synchronous (?) this prevents 
+	# this prevents 
 	# flooding the queue with interrupt messages and ensures that at most 
 	# one interrupt will be on the messaging queue.
 	def interrupt(self, Character):
@@ -164,8 +164,13 @@ class DungeonMaster:
 		try:
 			People[Character].Event.set()
 		except KeyError:
-			People[self.shortcuts[Character]].Event.set()
-
+			try:
+				People[self.shortcuts[Character]].Event.set()
+			except KeyError:
+				try:
+					People[Character.capitalize()].Event.set()
+				except KeyError:
+					self.displayText("I do not recognize that name.", ">>", 1)
 		return
 
 	def print_options(self, dictionary, prompt = "select a command:"):

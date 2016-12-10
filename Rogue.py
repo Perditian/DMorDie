@@ -482,7 +482,7 @@ class Rogue(AI):
 						if victim is not None:
 							extended0 = [(Monster.name, "Here's 100 gold to attack " + victim),
 							             (self.name, "Ok."), ("", self.name +" throws a knife into " + victim),
-							             (victim, "WTH?!?! OW")]
+							             (victim, "WTH?!?! OW! Curse your sudden but inevitable betrayal!")]
 						else: # I'm the only fighter:
 							extended0 = [(self.name, "...I'm the only one here...right?"), (Monster.name, "Hehehehe...")]
 					else: # I'm good:
