@@ -1,6 +1,7 @@
 """
  Avita Sharma
  Game State Class
+ A Collection of Shared Memory between the AI, GUI, and Battles.
 """ 
 
 import threading
@@ -22,43 +23,32 @@ class GameState(object):
 		self.__Locations  = Locations
 		self.__window     = Window
 		self.__Lock       = threading.RLock()
-#		self.__Lock2      = threading.RLock()
 
+	# call the function with the Game State Lock
 	def with_Lock(self, fun, args):
 		with self.__Lock:
 			return fun(*args)
 
+	# return the Game State Lock
 	def Lock(self):
 			return self.__Lock
 
+	# return the Post Office
 	def Messages(self):
 		with self.__Lock:
 			return self.__Messages
 
+	# return the GUI Window
 	def Window(self):
 		with self.__Lock:
 			return self.__window
 
+	# return the Characters (AI and NPC):
 	def Characters(self):
 		with self.__Lock:
 			return self.__Characters
 
+	# return the Locations:
 	def Locations(self):
 		with self.__Lock:
 			return self.__Locations
-
-	def set_Messages(self, Mess):
-		with self.__Lock:
-			self.__Messages = Mess
-
-	def set_Messages(self, Mess):
-		with self.__Lock:
-			self.__Messages = Mess
-
-	def set_Characters(self, Char):
-		with self.__Lock:
-			self.__Characters = Char
-
-	def set_Locations(self, Loc):
-		with self.__Lock:
-			self.__Locations = Loc

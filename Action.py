@@ -1,11 +1,7 @@
 """
- Avita Sharma
+ Avita Sharma, Eric Wyss, Davis Taus
  Action Class
  Creates, evaluates, and performs an action
- Note: Need a better reward/penalty system for updating probability of
- action success
-
- TODO: MAKE UTILITY FUNCTION ~NEGATIVE SIGMOID
 """ 
 import math
 
@@ -32,11 +28,11 @@ class Action:
 	# accordingly
 	def perform(self, game_state):
 		Window = game_state.Window()
-		(actual_utility, game_state) = self.action(game_state, self.action_args)
-		#Window.displayText("My success: " + str(self.success), ">", 2)
+		(actual_utility, game_state) = self.action(game_state, 
+			                           self.action_args)
+		
 		if actual_utility is None:
 			# we reached a contradiction; do nothing:
-			#Window.displayText("OBJECTION! *FINGER POINT* THERE'S A CONTRADICTION!", ">", 2)
 			return game_state
 
 		# prevent division by zero:
@@ -46,15 +42,15 @@ class Action:
 		actual_utility *= self.success
 		if actual_utility >= self.expected_utility:
 			# increase success by amount of success:
-			amount = (actual_utility - self.expected_utility) / self.expected_utility
+			amount = (actual_utility - self.expected_utility) / \
+			         self.expected_utility
 			self.success = min(1.0, self.success + self.sigmoid(amount))
 		else:
 			# decrease success by amount of failure:
 			# Note: there is always a miniscule chance of success!
-		#	Window.displayText("I failed by: " + str(amount), ">", 2)
-			amount = (self.expected_utility - actual_utility) / self.expected_utility
+			amount = (self.expected_utility - actual_utility) / \
+			self.expected_utility
 			self.success = max(0.001, self.success -  self.sigmoid(amount))
-		#Window.displayText("My new success: " + str(self.success), ">", 2)
 		return game_state
 
 	# save the expected utility calculation and returns it.
@@ -66,8 +62,4 @@ class Action:
 		(self.expected_utility, self.total_utility, self.action_args) = \
 		                        self.action_utility(game_state) 
 		self.expected_utility *= self.success
-	#	Window.displayText("This action has expected utility: " + str(self.expected_utility),
-	#		               ">", 1)
-	#	Window.displayText("This action has total utility: " + str(self.total_utility),
-	#						">", 1)
 		return self.expected_utility

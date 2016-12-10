@@ -29,7 +29,8 @@ except ImportError:
 from math import ceil
 
 
-def main():    
+def main():
+	# Make the Locations and NPCs:    
 	Tavern = Location('The Don\'t go Inn', health = 30)
 	barkeep = NPC("Anita Colbier", 0)
 	barkeep.barkeep = True
@@ -39,13 +40,13 @@ def main():
 
 	Village = Location("Rock Bottom Village", 0)
 	Village.Village = True
+	OldMan = NPC(Home = Village)
 
+	# Make the Playable Characters:
 	rogue = Rogue(0, Home = Village)
 	rogue1 = Rogue(1, 'Assassin', Village)
 	#warrior = Warrior(0, Location = Village)
 	#warrior1 = Warrior(1, Location = Village, Name = "Paladin")
-
-	OldMan = NPC(Home = Village)
 
 	# create the main window:
 	window = Tk()
@@ -53,16 +54,19 @@ def main():
 	window.config(bg = "#1a0d00")
 	DM = DungeonMaster(window)
 
+	# build the post office:
 	boxes = PostOffice()
 	for name in [rogue.name, rogue1.name]:
 		boxes.add_Name(name)
 
-
-	game_state = GameState(boxes, {rogue.name:rogue, rogue1.name:rogue1, OldMan.name:OldMan,
-					barkeep.name:barkeep},
+	# Wrap the above in the Game State:
+	game_state = GameState(boxes, {rogue.name:rogue, rogue1.name:rogue1, 
+		                           OldMan.name:OldMan, barkeep.name:barkeep},
 		         {Tavern.name:Tavern, Village.name:Village}, DM)
 
 	DM.set_GameState(game_state)
+
+	# Make the Monster:
 	num_chars = len(game_state.Characters())
 	dagon = Dragon("Menacing Dragon", health = (num_chars * 10))
 
@@ -78,6 +82,7 @@ def main():
 		            [Rogue_thread, Rogue_thread1], game_state))
 	Battle_thread.start()
 
+	# Start the game!
 	# open the main window:
 	window.mainloop()
 	Battle_thread.join()

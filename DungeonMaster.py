@@ -1,8 +1,7 @@
 """
- Avita Sharma
- Dungeon Master Class
+ Avita Sharma, Eric Wyss, Davis Taus
+ Dungeon Master (Window GUI) Class
 
-TODO: add Messaging
 """ 
 
 from AI import AI 

@@ -1,5 +1,5 @@
 """
- Avita Sharma
+ Avita Sharma, Eric Wyss, Davis Taus
  Artificial Intelligence Class
  Provides a template for the AIs
 
@@ -13,7 +13,6 @@
  This influences their choice of actions involving the DM. (I.E. whether to
  	follow the DM's advice, or not.)
 
-TODO: add concurrency, DM's interrupt feature, etc.
 """ 
 
 import random
@@ -66,11 +65,9 @@ class AI:
 		(w, goal_actions) = goals[rand]
 		return (goal_actions, names[rand])
 
+
 	# decide actions based on the expected utility of the action, and the
 	# level of trust in the DM
-	# TODO: invoke randomness/do stupid decisions
-	# NOTE: for testing, once a goal has no more profitable actions, I kill
-	# myself.
 	def decide_actions(self, actions, game_state):
 		max_utility = 0
 		Window = game_state.Window()
@@ -90,12 +87,12 @@ class AI:
 	def unlock_me(self):
 		self.Lock.release()
 	
-	# NOTE: this assumes a message-handling class that is passed with the game_state
-	# For now, messages are functions which take in the AI and Game State as parameters
-	# Good reason for polymorphic functions --> pass in NPCs or DM instead of AI
+	# receive all messages, interact with the valid ones and mark them as
+	# read:
 	def handle_messages(self, game_state):
 		MailBox = game_state.Messages()
-		Mail = [msg for msg in MailBox.get_Mail(self.name) if msg.valid == True]
+		Mail = [msg for msg in MailBox.get_Mail(self.name) \
+		            if msg.valid == True]
 		for msg in Mail:
 			if msg.valid:
 				msg.readme()
@@ -129,7 +126,8 @@ class AI:
 			# if there are no profitable actions to do, I prepare for battle:
 			while action is None:
 				if len(goalist) == len(self.Goals.keys()):
-					Window.displayText(self.name+" is ready to do battle!!", "", 2)
+					Window.displayText(self.name+" is ready to do battle!!",
+					                   "", 2)
 					self.ready2battle.set()
 					# reset the goalist, so I continue to do actions
 					# until the party is all ready to battle:

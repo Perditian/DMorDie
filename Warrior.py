@@ -1,5 +1,14 @@
 """
+Avita Sharma, Eric Wyss, Davis Taus
 Warrior Class, extends AI
+
+Warriors can:
+	(*) Attack other characters
+	(*) Attack other locations
+	(*) Drink in the Tavern
+	(*) Flirt with other characters
+	(*) Attack monsters in battle
+
 Avita Sharma, Eric Wyss, David Taus
 """
 
