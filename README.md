@@ -6,8 +6,9 @@ To Install:
 
 To Run:
 Linux: ./DMorDie
+
+
 Windows: python3 DMorDie.py
-in terminal
 
 # Code Overview:
 |File Name		|Description									 |
