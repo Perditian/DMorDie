@@ -72,7 +72,7 @@ class DungeonMaster:
 		self.shortcuts = {}
 
 		self.styles = {'Rogue': ('#ff5050', self.otherFont, 'r'), 
-			'Assasin': ('#66a3ff', self.otherFont, 'a'), 
+			'Assassin': ('#66a3ff', self.otherFont, 'a'), 
 			'': ('#fff2e6', self.narratorFont), 
 			'': ('#ff3300', self.otherFont), 
 			'>': ('#ffb066', self.otherFont), 

@@ -48,7 +48,7 @@ class AI:
 		self.fighter = fighter
 		self.Location = Location
 		self.zombie = False
-		
+
 
 		self.msg_cmds = {"pickpocket":["pickpocket you", "been pickpocket"],
 		                 "ask":["ask you", "been ask"], 
@@ -115,7 +115,7 @@ class AI:
 		Life = True
 		Window = game_state.Window()
 		while Life:
-			#turnstile for starting game:
+			#turnstile for starting/pausing the game:
 			Window._DungeonMaster__Lock.acquire()
 			Window._DungeonMaster__Lock.release()
 			# I am in battle, stop doing actions: (kill thread)

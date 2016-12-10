@@ -41,7 +41,7 @@ def main():
 	Village.Village = True
 
 	rogue = Rogue(0, Home = Village)
-	rogue1 = Rogue(1, 'Assasin', Village)
+	rogue1 = Rogue(1, 'Assassin', Village)
 	#warrior = Warrior(0, Location = Village)
 	#warrior1 = Warrior(1, Location = Village, Name = "Paladin")
 
