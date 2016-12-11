@@ -77,7 +77,7 @@ class Rogue(AI):
 			Window.displayText("Man, I don't care, you doin' this or what?",
 								self.name, 2)
 			Window.displayText("Urgh, fine. I'll bombard you with my "\
-							   "heroic feats later.", Flirtername)
+							   "heroic feats later.", Flirtername, 2)
 			game_state.withLock(lambda:Flirter.ready2battle.set())
 		# otherwise, tell them to go away:
 		else:
@@ -100,6 +100,8 @@ class Rogue(AI):
 		PostOffice = game_state.Messages()
 		Perpetrator = People[Perpname]
 		health_taken = 0
+		Attacker = Perpname
+		Victim = self.name
 		if Perpetrator.Alignment is 'chaotic':
 			Window.displayText("Hey! "+ self.name +"! You lookin' at me "\
 				               "funny?", Perpname, 2)
@@ -127,8 +129,7 @@ class Rogue(AI):
 						   ">", 1)
 		if Perpetrator.Event.wait(SHORTWAIT) is False:
 			Perpetrator.Event.clear()
-			Attacker = Perpname
-			Victim = self.name
+			
 			if Perpetrator.drunkeness >= 10:
 				Window.displayText(Attacker + " swings their fist at "+\
 								   Victim+", but hits themself instead!", 
@@ -143,14 +144,15 @@ class Rogue(AI):
 			Window.displayText(Attacker +" lost 5 health.", "<", 1)
 			def lost():
 				Perpetrator.health -= 5
-				Perpetrator.zombified()
+				Perpetrator.zombified(Window)
 			game_state.withLock(lost)
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 			health_taken = 5
 		else:
 			# simple d20 - hit roll, penalized since I noticed:
-			roll = random.randint(0, 20) - self.anger 
+			roll = random.randint(0, 20) - Perpetrator.anger
+			roll = max(1, roll)
 			prompt = Perpname + " rolled a " + str(roll)+", do they succeed?"
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
@@ -183,7 +185,7 @@ class Rogue(AI):
 		def end_fight():
 			Perpetrator.Event.clear()
 			Perpetrator.drunkeness -= 1
-			Perpetrator.drunkeness = max(0, self.drunkeness)
+			Perpetrator.drunkeness = max(0, Perpetrator.drunkeness)
 		game_state.withLock(end_fight)
 
 		"""

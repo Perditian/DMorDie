@@ -317,6 +317,7 @@ class Warrior(AI):
 			Victim = self.name
 			# simple d20 - hit roll, penalized since I noticed:
 			roll = random.randint(0, 20) - self.anger 
+			roll = max(1, roll)
 			prompt = Perpname + " rolled a " + str(roll)+", do they succeed?"
 			cmd = self.success_or_fail(Window, prompt)
 			if cmd:
@@ -372,7 +373,7 @@ class Warrior(AI):
 		People = game_state.Characters()
 		Window = game_state.Window()
 		health_taken = 0
-
+		Attacker = self.name
 		# if the Victim is a fighter, they can fight back:
 		if People[Victim].fighter == True: 
 			read = False
@@ -411,7 +412,6 @@ class Warrior(AI):
 						   Victim, "", 1)
 		if self.Event.wait(SHORTWAIT) is False:
 			self.Event.clear()
-			Attacker = self.name
 			if self.drunkeness >= 10:
 				Window.displayText(Attacker + " swings their fist at "+Victim+\
 								   ", but hits themself instead!", "", 2)
@@ -562,7 +562,8 @@ class Warrior(AI):
 		for (name, place) in Locations.items():
 			try:
    				if not self.name in place.branded:
-   				 	bar = name
+   					if place.Tavern:
+   				 		bar = name
 			except AttributeError:
 				pass
 		return (self.max_health - self.health, self.max_health, bar)
@@ -575,6 +576,7 @@ class Warrior(AI):
 		Window = game_state.Window()
 		health = 0
 		Tavern = Places[Tavernname]
+		print (Tavernname)
 		Window.displayText(self.name + " is in the Tavern", "", 2)
 		Window.displayText(Tavern.Bartender.name+", gimme another!", 
 						   self.name, 2)
@@ -584,7 +586,7 @@ class Warrior(AI):
 					 			   "slams it on the table.", "", 2)
 				def drunkonce():
 					self.Money -= 1
-					health = math.ceil((self.max_health - self.health) * 0.1)
+					health = ceil((self.max_health - self.health) * 0.1)
 					self.health += health # gain 10% of what you need
 					self.health = min(self.max_health, self.health)
 				game_state.withLock(drunkonce)
@@ -594,7 +596,7 @@ class Warrior(AI):
 				Window.displayText("Put'er on my tab.", self.name, 2)
 				def tab():
 					Tavern.tab[self.name] = Tavern.tab.get(self.name, 0) + 1
-					health = math.ceil((self.max_health - self.health) * 0.1)
+					health = ceil((self.max_health - self.health) * 0.1)
 					self.health += health # gain 10% of what you need
 					self.health = min(self.max_health, self.health)
 					if Tavern.tab[self.name] >= 5:
@@ -632,7 +634,7 @@ class Warrior(AI):
 			Window.displayText("Gahahaha! Weakling.", "Imanorc", 2)
 			Window.displayText("Imanorc crushes "+self.name+"'s hand for fun.",
 							   "", 2)
-			def got_crushed():
+			def got_crushed(health):
 				self.health -= 5
 				self.health = max(0, self.health)
 				health -= 5
@@ -641,7 +643,7 @@ class Warrior(AI):
 				else:
 					self.money -= 5
 					self.money = max(0, self.money)
-			game_state.withLock(got_crushed)
+			game_state.withLock(got_crushed, (health))
 		else:
 			self.Event.clear()
 			roll = random.randint(0, 20) + self.anger # simple d20 - athletics
@@ -650,20 +652,20 @@ class Warrior(AI):
 			if cmd:
 				Window.displayText("*BANG* Ha! I Win!!", self.name, 2)
 				Window.displayText("Nooo!! How could this be!", "Imanorc", 2)
-				def win():
+				def win(health):
 					self.money  += 5
-					health += math.ceil((self.max_health - self.health) * 0.1)
-					self.health += math.ceil((self.max_health - self.health) \
+					health += ceil((self.max_health - self.health) * 0.1)
+					self.health += ceil((self.max_health - self.health) \
 						           * 0.1)
 					self.health = min(self.max_health, self.health)
 					self.drunkeness += 5
-				game_state.withLock(win)
+				game_state.withLock(win, (health))
 			else:
 				Window.displayText("Grrrrghhh!!!! Why you so strronng???", 
 									self.name, 2)
 				Window.displayText("Gahahaha! You're so weak.", "Imanorc", 2)
 				Window.displayText(self.name+"'s arm is strained.", "", 2)
-				def got_strained():
+				def got_strained(health):
 					self.health -= 3
 					self.health = max(0, self.health)
 					health -= 3
@@ -672,7 +674,7 @@ class Warrior(AI):
 					else:
 						self.money -= 5
 						self.money = max(0, self.money)
-				game_state.withLock(got_strained)
+				game_state.withLock(got_strained, (health))
 		self.Event.clear()
 		return (health, game_state)
 
@@ -885,7 +887,7 @@ class Warrior(AI):
 					else:
 						Window.displayText("Did you cast singularity? Cause "\
 										   "the closer I get to you, the "\
-										   "faster time slips by.", FLirter, 2)
+										   "faster time slips by.", Flirter, 2)
 						dic_succ = "Only to pull you in closer."
 						ext_succ = [(Person, "My sphere will slowly drain "\
 								   "your energy if you don't kill a dragon."),
