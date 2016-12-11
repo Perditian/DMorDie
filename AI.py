@@ -61,7 +61,6 @@ class AI:
 		goals = [self.Goals[x] for x in goal if x not in exclude]
 		names = [x for x in goal if x not in exclude]
 		rand  = random.randint(0, len(goals) - 1)
-		print("I decided to " + names[rand])
 		(w, goal_actions) = goals[rand]
 		return (goal_actions, names[rand])
 
