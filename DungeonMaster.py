@@ -78,8 +78,8 @@ class DungeonMaster:
 			'<' : ('#ff00ff', self.otherFont), 
 			'You' : ('#e6e6ff', self.otherFont), 
 			'    ' : ('#663300', self.otherFont), 
-			'The Old Man' : ('#9999ff', self.otherFont), 
-			"Anita Colbier" : ('#ffa64d', self.otherFont),
+			'TheOldMan' : ('#9999ff', self.otherFont), 
+			'AnitaColbier' : ('#ffa64d', self.otherFont),
 			'Barbarian': ("#D0A9F5", self.otherFont, 'b'),
 			'Knight': ("#F3E2A9", self.otherFont, 'k')}
 		self.screen1Color = "#331a00"
@@ -163,8 +163,8 @@ class DungeonMaster:
 		self.entry1.bind('<Return>', self.callback1_1)
 
 		#to have text start printing from bottom
-		self.text1.insert(END, ' \n' * 70)
-		self.text2.insert(END, ' \n' * 70)
+		self.text1.insert(END, ' \n' * 100)
+		self.text2.insert(END, ' \n' * 100)
 
 		#create shortcuts for characters
 		for char in self.Game_State.Characters().keys():
@@ -357,7 +357,7 @@ class DungeonMaster:
 	def displayText2(self, message, msgFrom):
 		if (message == " "):
 			return
-		self.text2.insert(END, message, msgFrom)
+		self.text2.insert(END, message, msgFrom.replace(" ",""))
 		self.text2.see(END)
 
 	#callback1_1 for second screen
