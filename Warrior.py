@@ -111,6 +111,7 @@ class Warrior(AI):
 		Window = game_state.Window()
 		PostOffice = game_state.Messages()
 		Money_Lost = self.Money 
+
 		game_state.withLock(lambda:People[Perpetrator].Event.clear())
 		# wait for the DM to interact with this event
 		if People[Perpetrator].Event.wait(SHORTWAIT) is False:
@@ -137,7 +138,7 @@ class Warrior(AI):
 		else:
 			# DM is interacting with this event:
 			# add a penalty to Perpetrator's roll because I noticed:
-			roll = random.randint(1, 20) - Perpetrator.sleight # simple d20 
+			roll = random.randint(1, 20) - People[Perpetrator].sleight # simple d20 
 			roll = max(1, roll)
 			myroll = random.randint(1, 20) 
 			prompt = Perpetrator + " rolled a " + str(roll)+", and "+\
