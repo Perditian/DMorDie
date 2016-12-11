@@ -81,7 +81,8 @@ class DungeonMaster:
 			'TheOldMan' : ('#9999ff', self.otherFont), 
 			'AnitaColbier' : ('#ffa64d', self.otherFont),
 			'Barbarian': ("#D0A9F5", self.otherFont, 'b'),
-			'Knight': ("#F3E2A9", self.otherFont, 'k')}
+			'Knight': ("#F3E2A9", self.otherFont, 'k'),
+			'>>': ('#e6e6ff', self.otherFont)}
 		self.screen1Color = "#331a00"
 		self.screen2Color = "#330a00"
 

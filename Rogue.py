@@ -63,7 +63,6 @@ class Rogue(AI):
 
 	# someone is flirting with me:
 	def flirt_me(self, game_state, Flirtername):
-		self.Event.clear()
 		# If I know about the monster, share that information:
 		People = game_state.Characters()
 		Window = game_state.Window()
@@ -150,6 +149,7 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 			health_taken = 5
 		else:
+			Perpetrator.Event.clear()
 			# simple d20 - hit roll, penalized since I noticed:
 			roll = random.randint(0, 20) - Perpetrator.anger
 			roll = max(1, roll)
@@ -237,10 +237,7 @@ class Rogue(AI):
 			(read, rate, new_game_state) = \
 			                       self.pickpocket_fighter(game_state, Victim)
 			self.Event.clear()
-			if read == True:
-				return (rate, new_game_state)
-			else:
-				return (None, game_state)
+			return (rate, new_game_state)
 
     	# wait for the DM to interact with this event:
 		if self.Event.wait(SHORTWAIT) is False:
@@ -258,6 +255,7 @@ class Rogue(AI):
 			Window.displayText("", "", 2)
 			Window.displayText("", "", 2)
 		else:
+			self.Event.clear()
 			# the DM interacted, now see if I succeed:
 			roll = random.randint(0, 20) + self.sleight # simple d20 - sleight of hand
 			prompt = self.name + " rolled a " + str(roll)+", do they succeed?"
@@ -288,6 +286,7 @@ class Rogue(AI):
 		Window = game_state.Window()
 		PostOffice = game_state.Messages()
 		Money_Earned = People[Victim].Money
+		self.InternalEvent.clear()
 		# message to send to Victim:
 		sending = self.msg_cmds["pickpocket"]
 		msg = ExpiringMessage(self.name, (sending[0], self.name), LONGWAIT)
@@ -303,7 +302,17 @@ class Rogue(AI):
 					return (True, msg.content[1], game_state)
 			return (True, None, game_state) # just in case 
 
-		return (False, None, None)
+		# did not read message, we get to pickpocket!
+		Money_Earned = People[Victim].Money
+		def picksucc(Money_Earned):
+			self.Money += Money_Earned
+			People[Victim].Money = 0
+		game_state.withLock(picksucc, (Money_Earned,))
+		Window.displayText(Victim+" fails to notice "+self.name, "<", 2)
+		Window.displayText("The " + self.name + \
+			               " pickpocketed " + Victim + " for " +\
+			               str(Money_Earned) + " zenny!!", "<", 2)
+		return (False, Money_Earned, game_state)
 
 	# I am being pickpocketed!
 	def pickpocket_me(self, game_state, Perpetrator):
@@ -312,7 +321,7 @@ class Rogue(AI):
 		PostOffice = game_state.Messages()
 		Money_Lost = self.Money 
 		self.Event.clear()
-		People[Perpetrator].Event.clear()
+		#People[Perpetrator].Event.clear()
 		# wait for the DM to interact with this event
 		if People[Perpetrator].Event.wait(SHORTWAIT) is False:
 			# DM did not interact, do something horrible:
@@ -494,12 +503,12 @@ class Rogue(AI):
 		People = game_state.Characters()
 		Window = game_state.Window()
 		PostOffice = game_state.Messages()
+		self.InternalEvent.clear()
 		# message to send to Victim:
 		sending = self.msg_cmds["ask"]
 		msg = ExpiringMessage(self.name, (sending[0], self.name), LONGWAIT)
 		PostOffice.send_built_Message(self.name, Victim, msg)
 		msg.clear()
-		self.Event.clear()
 		if msg.read == True:
 			self.InternalEvent.wait()
 			#  get mail from victim

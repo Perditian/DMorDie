@@ -112,7 +112,7 @@ class Warrior(AI):
 		PostOffice = game_state.Messages()
 		Money_Lost = self.Money 
 
-		game_state.withLock(lambda:People[Perpetrator].Event.clear())
+		#game_state.withLock(lambda:People[Perpetrator].Event.clear())
 		# wait for the DM to interact with this event
 		if People[Perpetrator].Event.wait(SHORTWAIT) is False:
 			# DM did not interact, do something horrible:
@@ -240,6 +240,7 @@ class Warrior(AI):
 		Window = game_state.Window()
 		PostOffice = game_state.Messages()
 		health_taken = People[Victim].health
+		self.InternalEvent.clear()
 		# message to send to Victim:
 		sending = self.msg_cmds["kill"]
 		msg = ExpiringMessage(self.name, (sending[0], self.name), LONGWAIT)
@@ -254,8 +255,29 @@ class Warrior(AI):
 				if msg.content[0] == received:
 					return (True, msg.content[1], game_state)
 			return (True, None, game_state) # just in case 
-
-		return (False, None, None)
+		# failed to notics, kill them!:
+		Attacker = self.name
+		roll = random.randint(0, 12) + self.anger 
+		def killthem(roll):
+			People[Victim].health -= roll
+			People[Victim].health = max(1, People[Victim].health)
+		game_state.withLock(killthem, (roll,))
+		if People[Attacker].zombie:
+			Window.displayText("The undead " + Attacker + \
+							   "lunges out and bites "+ Victim+\
+							   ", dealing "+str(roll)+" damage!!", 
+							   "", 2)
+		elif People[Attacker].drunkeness >= 10:
+			Window.displayText(Attacker+" spazes towards "+Victim+\
+							   ", seems to lunge sideways, but kicks"\
+							   " upwards, sending "+Victim+" flying!!",
+							   "", 2)
+		else:
+			Window.displayText("The " + Attacker + " swings their "\
+							   "axe at " + Victim + " and deals " +\
+							   str(roll) + " damage!!", "", 2)
+		health_taken = roll
+		return (False, health_taken, game_state)
 
 	# someone is killing me!
 	def kill_me(self, game_state, Perpname):
@@ -381,10 +403,7 @@ class Warrior(AI):
 			(read, rate, new_game_state) = \
 									self.kill_fighter(game_state, Victim)
 			self.Event.clear()
-			if read == True:
-				return (rate, new_game_state)
-			else:
-				return (None, game_state)
+			return (rate, new_game_state)
 
 		if self.Alignment is 'chaotic':
 			Window.displayText("Hey! "+ Victim +"! You lookin' "\
@@ -545,6 +564,10 @@ class Warrior(AI):
 				destroyed = roll
 				Window.displayText("The Windmill deals "+ str(roll) +\
 								   " damage to "+ self.name, "<", 1)
+				def windkilled(destroyed):
+					self.health -= destroyed
+					self.health = max(0, self.health)
+				game_state.withLock(windkilled, (destroyed,))
 				self.zombified(Window)
 		Window.displayText("", "", 2)
 		Window.displayText("", "", 2)
@@ -581,7 +604,7 @@ class Warrior(AI):
 		Window = game_state.Window()
 		health = 0
 		Tavern = Places[Tavernname]
-		print (Tavernname)
+	
 		Window.displayText(self.name + " is in the Tavern", "", 2)
 		Window.displayText(Tavern.Bartender.name+", gimme another!", 
 						   self.name, 2)
@@ -643,11 +666,11 @@ class Warrior(AI):
 				self.health -= 5
 				self.health = max(0, self.health)
 				health -= 5
-				if self.money <= 0:
+				if self.Money <= 0:
 					Tavern.tab[self.name] = Tavern.tab.get(self.name, 0) + 5
 				else:
-					self.money -= 5
-					self.money = max(0, self.money)
+					self.Money -= 5
+					self.Money = max(0, self.Money)
 			game_state.withLock(got_crushed, (health,))
 		else:
 			self.Event.clear()
@@ -658,7 +681,7 @@ class Warrior(AI):
 				Window.displayText("*BANG* Ha! I Win!!", self.name, 2)
 				Window.displayText("Nooo!! How could this be!", "Imanorc", 2)
 				def win(health):
-					self.money  += 5
+					self.Money  += 5
 					health += ceil((self.max_health - self.health) * 0.1)
 					self.health += ceil((self.max_health - self.health) \
 						           * 0.1)
@@ -674,11 +697,11 @@ class Warrior(AI):
 					self.health -= 3
 					self.health = max(0, self.health)
 					health -= 3
-					if self.money <= 0:
+					if self.Money <= 0:
 						Tavern.tab[self.name] = Tavern.tab.get(self.name, 0) + 5
 					else:
-						self.money -= 5
-						self.money = max(0, self.money)
+						self.Money -= 5
+						self.Money = max(0, self.Money)
 				game_state.withLock(got_strained, (health,))
 		self.Event.clear()
 		return (health, game_state)
@@ -720,12 +743,12 @@ class Warrior(AI):
 		People = game_state.Characters()
 		Window = game_state.Window()
 		PostOffice = game_state.Messages()
+		self.InternalEvent.clear()
 		# message to send to Victim:
 		sending = self.msg_cmds["flirt"]
 		msg = ExpiringMessage(self.name, (sending[0], self.name), LONGWAIT)
 		PostOffice.send_built_Message(self.name, Flirter, msg)
 		msg.clear()
-		self.Event.clear()
 		if msg.read == True:
 			self.InternalEvent.wait()
 			#  get mail from victim
@@ -887,8 +910,8 @@ class Warrior(AI):
 									"later.")]
 						dic_fail = "Sorry but your asymptote diverges "\
 								   "from mine."
-						ext_fail = (Person, "I am limitless, so please "\
-								   "diverge away from me.")
+						ext_fail = [(Person, "I am limitless, so please "\
+								   "diverge away from me.")]
 					else:
 						Window.displayText("Did you cast singularity? Cause "\
 										   "the closer I get to you, the "\
