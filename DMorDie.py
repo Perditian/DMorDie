@@ -37,6 +37,7 @@ def main():
 	Tavern.Bartender = barkeep
 	barkeep.Location = Tavern
 	Tavern.Tavern = True
+	Tavern.tab = {}
 
 	Village = Location("Rock Bottom Village", 0)
 	Village.Village = True

@@ -567,11 +567,15 @@ class Warrior(AI):
    				 		bar = name
 			except AttributeError:
 				pass
+		if bar is None:
+			return (-10000, 0, "")
 		return (self.max_health - self.health, self.max_health, bar)
 
 	# drinking at the tavern:
 	def drinking(self, game_state, Tavernname):
 		self.Event.clear()
+		if Tavernname is "":
+			return
 		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
@@ -644,7 +648,7 @@ class Warrior(AI):
 				else:
 					self.money -= 5
 					self.money = max(0, self.money)
-			game_state.withLock(got_crushed, (health))
+			game_state.withLock(got_crushed, (health,))
 		else:
 			self.Event.clear()
 			roll = random.randint(0, 20) + self.anger # simple d20 - athletics
@@ -660,7 +664,7 @@ class Warrior(AI):
 						           * 0.1)
 					self.health = min(self.max_health, self.health)
 					self.drunkeness += 5
-				game_state.withLock(win, (health))
+				game_state.withLock(win, (health,))
 			else:
 				Window.displayText("Grrrrghhh!!!! Why you so strronng???", 
 									self.name, 2)
@@ -675,7 +679,7 @@ class Warrior(AI):
 					else:
 						self.money -= 5
 						self.money = max(0, self.money)
-				game_state.withLock(got_strained, (health))
+				game_state.withLock(got_strained, (health,))
 		self.Event.clear()
 		return (health, game_state)
 

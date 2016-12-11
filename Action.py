@@ -28,8 +28,11 @@ class Action:
 	# accordingly
 	def perform(self, game_state):
 		Window = game_state.Window()
-		(actual_utility, game_state) = self.action(game_state, 
-			                           self.action_args)
+		if self.action_args is None:
+			(actual_utility, game_state) = self.action(game_state)
+		else:
+			(actual_utility, game_state) = self.action(game_state, 
+			                           		self.action_args)
 		
 		if actual_utility is None:
 			# we reached a contradiction; do nothing:
