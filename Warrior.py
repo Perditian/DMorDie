@@ -568,14 +568,15 @@ class Warrior(AI):
 		return (self.max_health - self.health, self.max_health, bar)
 
 	# drinking at the tavern:
-	def drinking(self, game_state, Tavern):
+	def drinking(self, game_state, Tavernname):
 		self.Event.clear()
 		Places = game_state.Locations()
 		People = game_state.Characters()
 		Window = game_state.Window()
 		health = 0
+		Tavern = Places[Tavernname]
 		Window.displayText(self.name + " is in the Tavern", "", 2)
-		Window.displayText(Tavern.barkeep.name+", gimme another!", 
+		Window.displayText(Tavern.Bartender.name+", gimme another!", 
 						   self.name, 2)
 		with game_state.Lock():
 			if self.Money > 0:
@@ -589,7 +590,7 @@ class Warrior(AI):
 				game_state.withLock(drunkonce)
 			else:
 				Window.displayText("I need a coin, for some cold beer.", 
-								   Tavern.barkeep.name, 2)
+								   Tavern.Bartender.name, 2)
 				Window.displayText("Put'er on my tab.", self.name, 2)
 				def tab():
 					Tavern.tab[self.name] = Tavern.tab.get(self.name, 0) + 1
@@ -599,10 +600,12 @@ class Warrior(AI):
 					if Tavern.tab[self.name] >= 5:
 						Window.displayText("Dude, if ya keep drinkin without "\
 										   "payin, I'mma hafta kick you out "\
-										   "permanently.", Tavern.barkeep.name)
+										   "permanently.", 
+										   Tavern.Bartender.name)
 					if Tavern.tab[self.name] >= 10:
 						Window.displayText("Thats enough! Pay me at once or "\
-										   "geddout.", Tavern.barkeep.name, 2)
+										   "geddout.", 
+										   Tavern.Bartender.name, 2)
 						Window.displayText(self.name + " has no money, "\
 											"and was thrown out.", "", 2)
 						Tavern.branded.append(self.name)
