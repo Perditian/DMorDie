@@ -44,6 +44,16 @@ class Warrior(AI):
 			drinking_success = 0.6
 			kill_success = 0.4
 
+		self.orcStrong = ["Gahahaha! Weakling.", "None are strong as orc",
+								"You think you strong? HA!", "ORC STRONGEST"]
+		self.drunkResponse = ["I'm not drunk *hic*, YOU'RE drunk!",
+									"Have there always been three of you?",
+									"I only look sorta drunk, I'm actually\
+									very drunk."]
+		self.youDrunk = ["Yo, you're drunk, you need to calm down.",
+								  "Hey, how drunk are you?", 
+						    "Manbrodude, you're sloshed, let's get you home."]
+
 		KillPeople = Action(self.killpeople, self.killpeople_utility, 
 			                kill_success)
 		KillPlaces = Action(self.killplaces, self.killplaces_utility, 
@@ -301,9 +311,9 @@ class Warrior(AI):
 			Window.displayText(self.name+ ", you've insulted me! I must duel "\
 							   "to regain my honor!", Perpname, 2)
 		if Perpetrator.drunkeness >= 10:
-				Window.displayText("Yo, you're drunk, you need to calm down.", 
+				Window.displayText(random.choice(self.youDrunk), 
 								   self.name, 2)
-				Window.displayText("I'm not drunk *hic*, YOU'RE drunk! "\
+				Window.displayText(random.choice(self.drunkResponse)\
 								   "Enough talk, fight me!", Perpname, 2)
 		if Perpetrator.zombie:
 			Window.displayText("Dude, you stink and your face is fallin off",
@@ -659,7 +669,7 @@ class Warrior(AI):
 			self.Event.clear()
 			Window.displayText("Grrrrghhh!!!! Why you so strronng???", 
 						       self.name, 2)
-			Window.displayText("Gahahaha! Weakling.", "Imanorc", 2)
+			Window.displayText(random.choice(self.orcStrong), "Imanorc", 2)
 			Window.displayText("Imanorc crushes "+self.name+"'s hand for fun.",
 							   "", 2)
 			def got_crushed(health):
